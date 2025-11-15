@@ -170,6 +170,7 @@
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0"
                                           Text="🔎"
+                                          Foreground="White"
                                           FontSize="16"
                                           VerticalAlignment="Center"
                                           Margin="0,0,8,0"/>
@@ -290,6 +291,9 @@
 
                     <!-- Анимированная иконка на заднем фоне -->
                     <Image gif:AnimationBehavior.SourceUri="img/main.gif"
+                           gif:AnimationBehavior.CacheFramesInMemory="True"
+                           gif:AnimationBehavior.AutoStart="True"
+                           RenderOptions.BitmapScalingMode="LowQuality"
                            Width="400"
                            Height="400"
                            VerticalAlignment="Top"
@@ -301,8 +305,8 @@
 
                     <!-- Центральная welcome секция -->
                     <StackPanel VerticalAlignment="Top"
-                               HorizontalAlignment="Left"
-                               Margin="124,234,0,0" Grid.ColumnSpan="2">
+                               HorizontalAlignment="Center"
+                               Margin="0,234,0,0" Grid.ColumnSpan="2">
 
                         <!-- Приветственный текст -->
                         <TextBlock Text="Добро пожаловать, исследователь!"
