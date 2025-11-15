@@ -146,9 +146,13 @@
 
                 <!-- Левая панель - список проектов -->
                 <Border Grid.Column="0"
-                       Background="#10FFFFFF"
                        BorderBrush="#20FFFFFF"
                        BorderThickness="0,0,1,0">
+                    <Border.Background>
+                        <ImageBrush ImageSource="img/back.jpg"
+                                   Stretch="UniformToFill"
+                                   Opacity="0.3"/>
+                    </Border.Background>
                     <Grid Margin="20">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -349,9 +353,9 @@
                                         <Border Background="#30FFFFFF"
                                                CornerRadius="6"
                                                Padding="8,4">
-                                            <TextBlock Text="💻 Open AI"
+                                            <TextBlock Text="💻 Base agent"
                                                       FontSize="11"
-                                                      Foreground="#00D4FF"
+                                                      Foreground="#FFDD6C21"
                                                       FontWeight="SemiBold"/>
                                         </Border>
                                     </StackPanel>
@@ -371,7 +375,7 @@
                                            Width="40"
                                            Height="40"
                                            BorderThickness="0"
-                                           Cursor="Hand">
+                                           Cursor="Hand" Foreground="White">
                                         <Button.Template>
                                             <ControlTemplate TargetType="{x:Type Button}">
                                                 <Border Background="{TemplateBinding Background}"
@@ -389,9 +393,9 @@
                                             </ControlTemplate>
                                         </Button.Template>
                                         <TextBlock Text="→"
-                                                  FontSize="20"
-                                                  Foreground="Black"
-                                                  FontWeight="Bold"/>
+                                                  FontSize="30"
+                                                  Foreground="White"
+                                                  FontWeight="Bold" Height="39" FontFamily="Arial Black"/>
                                     </Button>
                                 </Grid>
                             </Border>
@@ -428,7 +432,7 @@
                                         <TextBlock Text="🚚"
                                                   FontSize="20"
                                                   HorizontalAlignment="Center"
-                                                  VerticalAlignment="Center"/>
+                                                  VerticalAlignment="Center" Foreground="White"/>
                                     </Border>
 
                                     <TextBlock Grid.Row="0" Grid.Column="1"
@@ -471,7 +475,7 @@
                                         <TextBlock Text="💎"
                                                   FontSize="20"
                                                   HorizontalAlignment="Center"
-                                                  VerticalAlignment="Center"/>
+                                                  VerticalAlignment="Center" Foreground="White"/>
                                     </Border>
 
                                     <TextBlock Grid.Row="0" Grid.Column="1"
@@ -513,7 +517,7 @@
                                         <TextBlock Text="💰"
                                                   FontSize="20"
                                                   HorizontalAlignment="Center"
-                                                  VerticalAlignment="Center"/>
+                                                  VerticalAlignment="Center" Foreground="White"/>
                                     </Border>
 
                                     <TextBlock Grid.Row="0" Grid.Column="1"
