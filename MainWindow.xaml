@@ -1,7 +1,8 @@
-<Window x:Class="BuildHub.MainWindow"
+<Window
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:BuildHub"
+        xmlns:av="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="av" x:Class="BuildHub.MainWindow"
         Title="BuildHub"
         Height="800"
         Width="1400"
@@ -16,7 +17,7 @@
     <Window.Resources>
         <local:RectConverter x:Key="RectConverter"/>
         <!-- Стиль для кнопок управления окном -->
-        <Style x:Key="WindowControlButtonStyle" TargetType="Button">
+        <Style x:Key="WindowControlButtonStyle" TargetType="{x:Type Button}">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
             <Setter Property="Foreground" Value="White"/>
@@ -26,7 +27,7 @@
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
-                    <ControlTemplate TargetType="Button">
+                    <ControlTemplate TargetType="{x:Type Button}">
                         <Border Background="{TemplateBinding Background}"
                                 CornerRadius="8">
                             <ContentPresenter HorizontalAlignment="Center"
@@ -43,7 +44,7 @@
         </Style>
 
         <!-- Стиль для элементов списка проектов -->
-        <Style x:Key="ProjectItemStyle" TargetType="Border">
+        <Style x:Key="ProjectItemStyle" TargetType="{x:Type Border}">
             <Setter Property="Background" Value="#20FFFFFF"/>
             <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="Padding" Value="12"/>
@@ -68,8 +69,8 @@
             <RectangleGeometry RadiusX="20" RadiusY="20">
                 <RectangleGeometry.Rect>
                     <MultiBinding Converter="{StaticResource RectConverter}">
-                        <Binding Path="ActualWidth" RelativeSource="{RelativeSource AncestorType=Border}"/>
-                        <Binding Path="ActualHeight" RelativeSource="{RelativeSource AncestorType=Border}"/>
+                        <Binding Path="ActualWidth" RelativeSource="{RelativeSource AncestorType={x:Type Border}}"/>
+                        <Binding Path="ActualHeight" RelativeSource="{RelativeSource AncestorType={x:Type Border}}"/>
                     </MultiBinding>
                 </RectangleGeometry.Rect>
             </RectangleGeometry>
@@ -133,22 +134,6 @@
                 </StackPanel>
 
                 <!-- Аватар пользователя -->
-                <Border Grid.Column="2"
-                       Width="36"
-                       Height="36"
-                       CornerRadius="18"
-                       Background="#FF9500"
-                       Margin="0,0,170,0"
-                       HorizontalAlignment="Right"
-                       VerticalAlignment="Center"
-                       Cursor="Hand">
-                    <TextBlock Text="A"
-                              FontSize="16"
-                              FontWeight="Bold"
-                              Foreground="White"
-                              HorizontalAlignment="Center"
-                              VerticalAlignment="Center"/>
-                </Border>
             </Grid>
 
             <!-- Основной контент: слева - список проектов, справа - рабочая зона -->
@@ -183,7 +168,7 @@
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0"
-                                          Text="🔍"
+                                          Text="🔎"
                                           FontSize="16"
                                           VerticalAlignment="Center"
                                           Margin="0,0,8,0"/>
@@ -285,72 +270,27 @@
                                 </Border>
 
                                 <!-- 7 дней назад -->
-                                <TextBlock Text="7 days ago"
-                                          FontSize="14"
-                                          FontWeight="SemiBold"
-                                          Foreground="#AAAAAA"
-                                          Margin="0,20,0,10"/>
-
-                                <Border Style="{StaticResource ProjectItemStyle}">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0"
-                                                  Text="Tell us about your capabilities"
-                                                  FontSize="13"
-                                                  Foreground="White"
-                                                  TextTrimming="CharacterEllipsis"/>
-                                        <TextBlock Grid.Column="1"
-                                                  Text="⋯"
-                                                  FontSize="16"
-                                                  Foreground="#AAAAAA"
-                                                  VerticalAlignment="Center"/>
-                                    </Grid>
-                                </Border>
                             </StackPanel>
                         </ScrollViewer>
 
                         <!-- Баннер подписки внизу -->
-                        <Border Grid.Row="3"
-                               Background="#25D4A520"
-                               CornerRadius="10"
-                               Padding="15"
-                               Margin="0,10,0,0">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-                                <StackPanel Grid.Row="0" Orientation="Horizontal">
-                                    <TextBlock Text="💎" FontSize="16" Margin="0,0,5,0"/>
-                                    <TextBlock Text="Purchase"
-                                              FontSize="13"
-                                              FontWeight="SemiBold"
-                                              Foreground="#D4A520"/>
-                                </StackPanel>
-                                <TextBlock Grid.Row="1"
-                                          Text="a subscription to unlock&#x0a;over 15 new features"
-                                          FontSize="11"
-                                          Foreground="#CCCCCC"
-                                          Margin="0,5,0,0"
-                                          TextWrapping="Wrap"/>
-                            </Grid>
-                        </Border>
                     </Grid>
                 </Border>
 
                 <!-- Правая панель - рабочая зона -->
                 <Grid Grid.Column="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="433*"/>
+                        <ColumnDefinition Width="91*"/>
+                    </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
                     <!-- Центральная welcome секция -->
-                    <StackPanel VerticalAlignment="Center"
-                               HorizontalAlignment="Center"
-                               Margin="0,-100,0,0">
+                    <StackPanel VerticalAlignment="Top"
+                               HorizontalAlignment="Left"
+                               Margin="124,101,0,0" Grid.ColumnSpan="2">
 
                         <!-- Анимированная иконка -->
                         <Border Width="120"
@@ -363,18 +303,27 @@
                                Margin="0,0,0,30">
                             <Ellipse Width="80"
                                     Height="80"
-                                    Fill="#60D4A520"/>
+                                    Fill="#60D4A520" RenderTransformOrigin="0.5,0.5">
+                                <Ellipse.RenderTransform>
+                                    <TransformGroup>
+                                        <ScaleTransform/>
+                                        <SkewTransform/>
+                                        <RotateTransform Angle="27.441"/>
+                                        <TranslateTransform/>
+                                    </TransformGroup>
+                                </Ellipse.RenderTransform>
+                            </Ellipse>
                         </Border>
 
                         <!-- Приветственный текст -->
-                        <TextBlock Text="Welcome back Alex!"
+                        <TextBlock Text="Welcome back Alex!"Text="Добро пожаловать, исследователь!"
                                   FontSize="32"
                                   FontWeight="SemiBold"
                                   Foreground="White"
                                   HorizontalAlignment="Center"
                                   Margin="0,0,0,10"/>
 
-                        <TextBlock Text="Which house drawing do you want to analyze today?"
+                        <TextBlock Text="Что вы хотите проанализировать сегодня?"
                                   FontSize="16"
                                   Foreground="#AAAAAA"
                                   HorizontalAlignment="Center"
@@ -421,7 +370,7 @@
                                             Foreground="#AAAAAA"
                                             FontSize="14"
                                             VerticalAlignment="Center"
-                                            Text="Tell us about your capabilities"/>
+                                            Text="Расскажите нам о своих возможностях"/>
 
                                     <!-- Кнопка отправки -->
                                     <Button Grid.Column="2"
@@ -430,12 +379,8 @@
                                            Height="40"
                                            BorderThickness="0"
                                            Cursor="Hand">
-                                        <TextBlock Text="→"
-                                                  FontSize="20"
-                                                  Foreground="Black"
-                                                  FontWeight="Bold"/>
                                         <Button.Template>
-                                            <ControlTemplate TargetType="Button">
+                                            <ControlTemplate TargetType="{x:Type Button}">
                                                 <Border Background="{TemplateBinding Background}"
                                                        CornerRadius="20"
                                                        Width="{TemplateBinding Width}"
@@ -450,6 +395,10 @@
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>
                                         </Button.Template>
+                                        <TextBlock Text="→"
+                                                  FontSize="20"
+                                                  Foreground="Black"
+                                                  FontWeight="Bold"/>
                                     </Button>
                                 </Grid>
                             </Border>
