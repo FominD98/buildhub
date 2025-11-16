@@ -314,11 +314,18 @@
 
                         <!-- Приветственный текст -->
                         <TextBlock Text="Добро пожаловать, исследователь!"
-                                  FontSize="32"
-                                  FontWeight="SemiBold"
-                                  Foreground="White"
+                                  FontSize="42"
+                                  FontWeight="Bold"
                                   HorizontalAlignment="Center"
-                                  Margin="0,0,0,10"/>
+                                  Margin="0,0,0,10">
+                            <TextBlock.Foreground>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                    <GradientStop Color="#FFF5F0" Offset="0"/>
+                                    <GradientStop Color="#FFDAB9" Offset="0.5"/>
+                                    <GradientStop Color="#EC4899" Offset="1"/>
+                                </LinearGradientBrush>
+                            </TextBlock.Foreground>
+                        </TextBlock>
 
                         <TextBlock Text="Что вы хотите проанализировать сегодня?"
                                   FontSize="16"

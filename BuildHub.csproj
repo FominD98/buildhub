@@ -21,6 +21,10 @@
     <Resource Include="img\back.jpg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
+    <None Remove="img\back2.jpg" />
+    <Resource Include="img\back2.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
 </Project>
