@@ -4,6 +4,7 @@ using System.Windows.Media;
 using BuildHub.Services;
 using System.Windows.Controls;
 using System;
+using System.Net.Http;
 
 namespace BuildHub
 {
@@ -99,6 +100,7 @@ namespace BuildHub
             SendButton.IsEnabled = false;
             InputTextBox.IsEnabled = false;
             InputTextBox.Text = "Отправка запроса...";
+            InputTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#AAAAAA"));
 
             try
             {
@@ -110,10 +112,35 @@ namespace BuildHub
                     MessageBox.Show($"Ответ от {_currentAiService.GetServiceName()}:\n\n{response}",
                                   "Ответ AI", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
+                else
+                {
+                    MessageBox.Show("AI сервис не инициализирован", "Ошибка",
+                                  MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                MessageBox.Show("Запрос был отменен", "Отменено",
+                              MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (ArgumentException ex)
+            {
+                MessageBox.Show($"Некорректные данные: {ex.Message}", "Ошибка валидации",
+                              MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            catch (HttpRequestException ex)
+            {
+                MessageBox.Show($"Ошибка сети при обращении к API:\n{ex.Message}\n\nПроверьте подключение к интернету и API ключи.",
+                              "Сетевая ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (InvalidOperationException ex)
+            {
+                MessageBox.Show($"Ошибка обработки ответа API:\n{ex.Message}\n\nВозможно, формат ответа API изменился.",
+                              "Ошибка обработки", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при отправке запроса: {ex.Message}",
+                MessageBox.Show($"Непредвиденная ошибка:\n{ex.Message}\n\nТип: {ex.GetType().Name}",
                               "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
