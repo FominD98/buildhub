@@ -374,13 +374,16 @@
                                     </StackPanel>
 
                                     <!-- Текстовое поле -->
-                                    <TextBox Grid.Column="1"
+                                    <TextBox x:Name="InputTextBox"
+                                            Grid.Column="1"
                                             Background="Transparent"
                                             BorderThickness="0"
                                             Foreground="#AAAAAA"
                                             FontSize="14"
                                             VerticalAlignment="Center"
-                                            Text="Расскажите нам о своих возможностях"/>
+                                            Text="Расскажите нам о своих возможностях"
+                                            GotFocus="InputTextBox_GotFocus"
+                                            LostFocus="InputTextBox_LostFocus"/>
 
                                     <!-- Кнопка отправки -->
                                     <Button Grid.Column="2"
