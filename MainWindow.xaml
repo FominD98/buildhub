@@ -358,20 +358,20 @@
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <!-- AI Indicator -->
-                                    <StackPanel Grid.Column="0"
-                                              Orientation="Horizontal"
-                                              VerticalAlignment="Center"
-                                              Margin="0,0,15,0">
-                                        <Border Background="#30FFFFFF"
-                                               CornerRadius="6"
-                                               Padding="8,4">
-                                            <TextBlock Text="💻 Base agent"
-                                                      FontSize="11"
-                                                      Foreground="#FFDD6C21"
-                                                      FontWeight="SemiBold"/>
-                                        </Border>
-                                    </StackPanel>
+                                    <!-- AI Provider Selector -->
+                                    <ComboBox x:Name="AiProviderComboBox"
+                                             Grid.Column="0"
+                                             VerticalAlignment="Center"
+                                             Margin="0,0,15,0"
+                                             Width="150"
+                                             Background="#30FFFFFF"
+                                             Foreground="White"
+                                             BorderBrush="#30FFFFFF"
+                                             SelectedIndex="0">
+                                        <ComboBoxItem Content="💻 ChatGPT" Foreground="White"/>
+                                        <ComboBoxItem Content="🤖 DeepSeek" Foreground="White"/>
+                                        <ComboBoxItem Content="🔮 YandexGPT" Foreground="White"/>
+                                    </ComboBox>
 
                                     <!-- Текстовое поле -->
                                     <TextBox x:Name="InputTextBox"
@@ -386,11 +386,14 @@
                                             LostFocus="InputTextBox_LostFocus"/>
 
                                     <!-- Кнопка отправки -->
-                                    <Button Grid.Column="2"
+                                    <Button x:Name="SendButton"
+                                           Grid.Column="2"
                                            Width="40"
                                            Height="40"
                                            BorderThickness="0"
-                                           Cursor="Hand" Foreground="White">
+                                           Cursor="Hand"
+                                           Foreground="White"
+                                           Click="SendButton_Click">
                                         <Button.Background>
                                             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                                                 <GradientStop Color="#FFF5F0" Offset="0"/>

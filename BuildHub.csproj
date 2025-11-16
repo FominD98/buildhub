@@ -12,6 +12,7 @@
   <ItemGroup>
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
     <PackageReference Include="XamlAnimatedGif" Version="2.3.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>
