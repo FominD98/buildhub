@@ -96,11 +96,17 @@
                            Orientation="Horizontal"
                            VerticalAlignment="Center"
                            Margin="20,0">
-                    <Border Background="#7C3AED"
-                            Width="32"
+                    <Border Width="32"
                             Height="32"
                             CornerRadius="6"
                             Margin="0,0,10,0">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#FFF5F0" Offset="0"/>
+                                <GradientStop Color="#FFDAB9" Offset="0.5"/>
+                                <GradientStop Color="#EC4899" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
                         <TextBlock Text="B"
                                   FontSize="20"
                                   FontWeight="Bold"
@@ -378,23 +384,35 @@
 
                                     <!-- Кнопка отправки -->
                                     <Button Grid.Column="2"
-                                           Background="#7C3AED"
                                            Width="40"
                                            Height="40"
                                            BorderThickness="0"
                                            Cursor="Hand" Foreground="White">
+                                        <Button.Background>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                <GradientStop Color="#FFF5F0" Offset="0"/>
+                                                <GradientStop Color="#FFDAB9" Offset="0.5"/>
+                                                <GradientStop Color="#EC4899" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Button.Background>
                                         <Button.Template>
                                             <ControlTemplate TargetType="{x:Type Button}">
-                                                <Border Background="{TemplateBinding Background}"
-                                                       CornerRadius="20"
+                                                <Border CornerRadius="20"
                                                        Width="{TemplateBinding Width}"
                                                        Height="{TemplateBinding Height}">
+                                                    <Border.Background>
+                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                            <GradientStop Color="#FFF5F0" Offset="0"/>
+                                                            <GradientStop Color="#FFDAB9" Offset="0.5"/>
+                                                            <GradientStop Color="#EC4899" Offset="1"/>
+                                                        </LinearGradientBrush>
+                                                    </Border.Background>
                                                     <ContentPresenter HorizontalAlignment="Center"
                                                                     VerticalAlignment="Center"/>
                                                 </Border>
                                                 <ControlTemplate.Triggers>
                                                     <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter Property="Background" Value="#E5B730"/>
+                                                        <Setter Property="Opacity" Value="0.8"/>
                                                     </Trigger>
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>
@@ -430,12 +448,18 @@
                                     </Grid.ColumnDefinitions>
 
                                     <Border Grid.Row="0" Grid.RowSpan="2"
-                                           Background="#7C3AED"
                                            Width="40"
                                            Height="40"
                                            CornerRadius="8"
                                            VerticalAlignment="Center"
                                            Margin="0,0,12,0">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                <GradientStop Color="#FFF5F0" Offset="0"/>
+                                                <GradientStop Color="#FFDAB9" Offset="0.5"/>
+                                                <GradientStop Color="#EC4899" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
                                         <TextBlock Text="🚚"
                                                   FontSize="20"
                                                   HorizontalAlignment="Center"
@@ -473,12 +497,18 @@
                                     </Grid.ColumnDefinitions>
 
                                     <Border Grid.Row="0" Grid.RowSpan="2"
-                                           Background="#7C3AED"
                                            Width="40"
                                            Height="40"
                                            CornerRadius="8"
                                            VerticalAlignment="Center"
                                            Margin="0,0,12,0">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                <GradientStop Color="#FFF5F0" Offset="0"/>
+                                                <GradientStop Color="#FFDAB9" Offset="0.5"/>
+                                                <GradientStop Color="#EC4899" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
                                         <TextBlock Text="💎"
                                                   FontSize="20"
                                                   HorizontalAlignment="Center"
@@ -515,12 +545,18 @@
                                     </Grid.ColumnDefinitions>
 
                                     <Border Grid.Row="0" Grid.RowSpan="2"
-                                           Background="#7C3AED"
                                            Width="40"
                                            Height="40"
                                            CornerRadius="8"
                                            VerticalAlignment="Center"
                                            Margin="0,0,12,0">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                <GradientStop Color="#FFF5F0" Offset="0"/>
+                                                <GradientStop Color="#FFDAB9" Offset="0.5"/>
+                                                <GradientStop Color="#EC4899" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
                                         <TextBlock Text="💰"
                                                   FontSize="20"
                                                   HorizontalAlignment="Center"
