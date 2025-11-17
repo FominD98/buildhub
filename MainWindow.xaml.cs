@@ -258,9 +258,6 @@ namespace BuildHub
             {
                 Console.WriteLine("→ Starting async processing...");
 
-                // Удаляем индикатор "думает"
-                _chatMessages.Remove(thinkingMessage);
-
                 // Проверяем, выбрано ли несколько агентов
                 Console.WriteLine($"Selected agents: {_selectedAgentIds.Count}");
 
@@ -286,27 +283,44 @@ namespace BuildHub
 
                     Console.WriteLine($"  Waiting for {tasks.Count} agents...");
                     var results = await Task.WhenAll(tasks);
+                    Console.WriteLine($"  ✓ Task.WhenAll completed. Got {results.Length} results");
+
+                    // Удаляем индикатор "думает"
+                    Console.WriteLine($"  Removing thinking message. Count before: {_chatMessages.Count}");
+                    _chatMessages.Remove(thinkingMessage);
+                    Console.WriteLine($"  ✓ Thinking message removed. Count after: {_chatMessages.Count}");
 
                     // Добавляем ответы от каждого агента в чат
+                    int processedCount = 0;
                     foreach (var (agentName, task) in results)
                     {
+                        processedCount++;
+                        Console.WriteLine($"  → Processing result #{processedCount}: Agent={agentName}, Status={task.Status}");
+
                         string content;
                         if (task.Status == Models.TaskStatus.Completed)
                         {
                             content = task.Response ?? "Нет ответа";
+                            Console.WriteLine($"    ✓ Completed. Response length: {content.Length} chars");
                         }
                         else if (task.Status == Models.TaskStatus.Failed)
                         {
                             content = $"❌ Ошибка: {task.ErrorMessage}";
+                            Console.WriteLine($"    ✗ Failed: {task.ErrorMessage}");
                         }
                         else
                         {
                             content = "⚠️ Задача была отменена";
+                            Console.WriteLine($"    ⚠ Cancelled");
                         }
 
+                        Console.WriteLine($"    Adding message to chat. Current count before add: {_chatMessages.Count}");
                         _chatMessages.Add(new ChatMessage(MessageRole.Assistant, content, agentName));
+                        Console.WriteLine($"    ✓ Message added. New count: {_chatMessages.Count}");
                         ScrollToBottom();
                     }
+
+                    Console.WriteLine($"  ✓ Processed {processedCount} agent responses total");
 
                     return; // Выходим из метода, сообщения уже добавлены
                 }
@@ -320,6 +334,11 @@ namespace BuildHub
                     {
                         Console.WriteLine($"  Executing agent: {agent.Name}");
                         var task = await _agentExecutor.ExecuteTaskAsync(agent, userMessage);
+
+                        // Удаляем индикатор "думает"
+                        Console.WriteLine($"  Removing thinking message. Count before: {_chatMessages.Count}");
+                        _chatMessages.Remove(thinkingMessage);
+                        Console.WriteLine($"  ✓ Thinking message removed. Count after: {_chatMessages.Count}");
 
                         string content;
                         if (task.Status == Models.TaskStatus.Completed)
@@ -346,6 +365,8 @@ namespace BuildHub
                     else
                     {
                         Console.WriteLine("  ✗ Agent not found!");
+                        // Удаляем индикатор "думает"
+                        _chatMessages.Remove(thinkingMessage);
                         _chatMessages.Add(new ChatMessage(MessageRole.Assistant, "❌ Выбранный агент не найден"));
                         ScrollToBottom();
                         return;
@@ -361,12 +382,20 @@ namespace BuildHub
                     {
                         Console.WriteLine($"  Calling {_currentAiService.GetServiceName()}...");
                         var response = await _currentAiService.SendMessageAsync(userMessage);
+
+                        // Удаляем индикатор "думает"
+                        Console.WriteLine($"  Removing thinking message. Count before: {_chatMessages.Count}");
+                        _chatMessages.Remove(thinkingMessage);
+                        Console.WriteLine($"  ✓ Thinking message removed. Count after: {_chatMessages.Count}");
+
                         Console.WriteLine($"  ✓ Got response: {response.Substring(0, Math.Min(50, response.Length))}...");
                         _chatMessages.Add(new ChatMessage(MessageRole.Assistant, response));
                     }
                     else
                     {
                         Console.WriteLine("  ✗ AI service is null!");
+                        // Удаляем индикатор "думает"
+                        _chatMessages.Remove(thinkingMessage);
                         _chatMessages.Add(new ChatMessage(MessageRole.Assistant, "❌ AI сервис не инициализирован"));
                     }
 
