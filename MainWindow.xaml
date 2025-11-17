@@ -450,7 +450,7 @@
                 <!-- Правая панель - с переключением между стартом и чатом -->
                 <Grid Grid.Column="1">
                     <!-- Стартовая страница (показывается когда чат пустой) -->
-                    <Grid Visibility="{Binding ElementName=ChatMessagesControl, Path=Items.Count, Converter={StaticResource CollectionEmptyConverter}}">
+                    <Grid x:Name="WelcomeGrid" Visibility="Visible">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="433*"/>
                             <ColumnDefinition Width="91*"/>
@@ -774,7 +774,7 @@
                     </Grid>
 
                     <!-- Интерфейс чата (показывается когда есть сообщения) -->
-                    <Grid Margin="20" Visibility="{Binding ElementName=ChatMessagesControl, Path=Items.Count, Converter={StaticResource CollectionHasItemsConverter}}">
+                    <Grid x:Name="ChatGrid" Margin="20" Visibility="Collapsed">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>

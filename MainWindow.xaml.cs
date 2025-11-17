@@ -145,6 +145,25 @@ namespace BuildHub
             this.Close();
         }
 
+        private void UpdateChatVisibility()
+        {
+            if (WelcomeGrid != null && ChatGrid != null)
+            {
+                if (_chatMessages.Count > 0)
+                {
+                    WelcomeGrid.Visibility = Visibility.Collapsed;
+                    ChatGrid.Visibility = Visibility.Visible;
+                    Console.WriteLine($"✓ Switched to Chat view. Messages: {_chatMessages.Count}");
+                }
+                else
+                {
+                    WelcomeGrid.Visibility = Visibility.Visible;
+                    ChatGrid.Visibility = Visibility.Collapsed;
+                    Console.WriteLine($"✓ Switched to Welcome view. Messages: {_chatMessages.Count}");
+                }
+            }
+        }
+
         private void AgentBuilderButton_Click(object sender, RoutedEventArgs e)
         {
             var agentBuilderWindow = new AgentBuilderWindow();
@@ -233,6 +252,9 @@ namespace BuildHub
             // Добавляем сообщение пользователя в чат
             _chatMessages.Add(new ChatMessage(MessageRole.User, userMessage));
             Console.WriteLine($"✓ Added user message. Total messages: {_chatMessages.Count}");
+
+            // Переключаем видимость на чат
+            UpdateChatVisibility();
 
             // Очищаем поле ввода
             activeTextBox.Text = string.Empty;
