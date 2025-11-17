@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:BuildHub"
+        xmlns:Converters="clr-namespace:BuildHub.Converters"
         xmlns:gif="https://github.com/XamlAnimatedGif/XamlAnimatedGif"
         xmlns:av="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="av" x:Class="BuildHub.MainWindow"
         Title="BuildHub"
@@ -18,6 +19,9 @@
     <Window.Resources>
         <local:RectConverter x:Key="RectConverter"/>
         <local:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
+        <local:Converters.MessageAlignmentConverter x:Key="MessageAlignmentConverter"/>
+        <local:Converters.MessageBackgroundConverter x:Key="MessageBackgroundConverter"/>
+        <local:Converters.BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
 
         <!-- Стиль для ComboBox -->
         <Style TargetType="{x:Type ComboBox}">
@@ -441,354 +445,195 @@
                     </Grid>
                 </Border>
 
-                <!-- Правая панель - рабочая зона -->
-                <Grid Grid.Column="1">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="433*"/>
-                        <ColumnDefinition Width="91*"/>
-                    </Grid.ColumnDefinitions>
+                <!-- Правая панель - чат -->
+                <!-- Правая панель - чат -->
+                <Grid Grid.Column="1" Margin="20">
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Анимированная иконка на заднем фоне -->
-                    <Image gif:AnimationBehavior.SourceUri="img/main.gif"
-                           gif:AnimationBehavior.CacheFramesInMemory="True"
-                           gif:AnimationBehavior.AutoStart="True"
-                           RenderOptions.BitmapScalingMode="LowQuality"
-                           Width="400"
-                           Height="400"
-                           VerticalAlignment="Top"
-                           HorizontalAlignment="Center"
-                           Margin="0,0,0,0"
-                           Stretch="Uniform"
-                           Opacity="0.9"
-                           Grid.ColumnSpan="2"/>
+                    <!-- Заголовок чата -->
+                    <TextBlock Grid.Row="0"
+                              Text="BuildHub AI Assistant"
+                              FontSize="24"
+                              FontWeight="Bold"
+                              Foreground="White"
+                              Margin="0,0,0,20">
+                        <TextBlock.Foreground>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#FFF5F0" Offset="0"/>
+                                <GradientStop Color="#FFDAB9" Offset="0.5"/>
+                                <GradientStop Color="#EC4899" Offset="1"/>
+                            </LinearGradientBrush>
+                        </TextBlock.Foreground>
+                    </TextBlock>
 
-                    <!-- Центральная welcome секция -->
-                    <StackPanel VerticalAlignment="Top"
-                               HorizontalAlignment="Center"
-                               Margin="0,234,0,0" Grid.ColumnSpan="2">
+                    <!-- Область чата -->
+                    <Border Grid.Row="1"
+                           Background="#15FFFFFF"
+                           CornerRadius="12"
+                           BorderBrush="#30FFFFFF"
+                           BorderThickness="1"
+                           Margin="0,0,0,20">
+                        <ScrollViewer x:Name="ChatScrollViewer"
+                                     VerticalScrollBarVisibility="Auto"
+                                     Padding="15">
+                            <ItemsControl x:Name="ChatMessagesControl">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Margin="0,5"
+                                               HorizontalAlignment="{Binding Role, Converter={StaticResource MessageAlignmentConverter}}"
+                                               MaxWidth="600">
+                                            <Border Background="{Binding Role, Converter={StaticResource MessageBackgroundConverter}}"
+                                                   CornerRadius="12"
+                                                   Padding="15,10">
+                                                <StackPanel>
+                                                    <!-- Имя агента (если есть) -->
+                                                    <TextBlock Text="{Binding AgentName}"
+                                                              FontSize="11"
+                                                              FontWeight="SemiBold"
+                                                              Foreground="#AAAAAA"
+                                                              Margin="0,0,0,5"
+                                                              Visibility="{Binding AgentName, Converter={StaticResource StringToVisibilityConverter}}"/>
 
-                        <!-- Приветственный текст -->
-                        <TextBlock Text="Добро пожаловать, исследователь!"
-                                  FontSize="42"
-                                  FontWeight="Bold"
-                                  HorizontalAlignment="Center"
-                                  Margin="0,0,0,10">
-                            <TextBlock.Foreground>
-                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                    <GradientStop Color="#FFF5F0" Offset="0"/>
-                                    <GradientStop Color="#FFDAB9" Offset="0.5"/>
-                                    <GradientStop Color="#EC4899" Offset="1"/>
-                                </LinearGradientBrush>
-                            </TextBlock.Foreground>
-                        </TextBlock>
+                                                    <!-- Текст сообщения -->
+                                                    <TextBlock Text="{Binding Content}"
+                                                              FontSize="14"
+                                                              Foreground="White"
+                                                              TextWrapping="Wrap"/>
 
-                        <TextBlock Text="Что вы хотите проанализировать сегодня?"
-                                  FontSize="16"
-                                  Foreground="#AAAAAA"
-                                  HorizontalAlignment="Center"
-                                  Margin="0,0,0,40"/>
+                                                    <!-- Временная метка -->
+                                                    <TextBlock Text="{Binding Timestamp, StringFormat='{}{0:HH:mm}'}"
+                                                              FontSize="10"
+                                                              Foreground="#888888"
+                                                              HorizontalAlignment="Right"
+                                                              Margin="0,5,0,0"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
 
-                        <!-- Панель с опциями -->
-                        <Grid HorizontalAlignment="Center" Width="800">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
+                    <!-- Панель ввода с чекбоксами агентов -->
+                    <Grid Grid.Row="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
 
-                            <!-- Input область -->
-                            <Border Background="#15FFFFFF"
-                                   CornerRadius="12"
-                                   Padding="20"
-                                   BorderBrush="#30FFFFFF"
-                                   BorderThickness="1">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
+                        <!-- Чекбоксы агентов -->
+                        <Border Grid.Row="0"
+                               Background="#15FFFFFF"
+                               CornerRadius="8"
+                               Padding="10"
+                               Margin="0,0,0,10"
+                               BorderBrush="#30FFFFFF"
+                               BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="Выберите агентов:"
+                                          FontSize="12"
+                                          Foreground="#AAAAAA"
+                                          Margin="0,0,0,8"/>
+                                <WrapPanel x:Name="AgentCheckboxesPanel">
+                                    <!-- Чекбоксы будут добавляться динамически -->
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
 
-                                    <!-- AI Provider Selector -->
-                                    <ComboBox x:Name="AiProviderComboBox"
-                                             Grid.Column="0"
-                                             VerticalAlignment="Center"
-                                             Margin="0,0,10,0"
-                                             Width="150"
-                                             Background="#30FFFFFF"
-                                             Foreground="White"
-                                             BorderBrush="#30FFFFFF"
-                                             SelectedIndex="0"
-                                             SelectionChanged="AiProviderComboBox_SelectionChanged">
-                                        <ComboBoxItem Content="💻 ChatGPT"/>
-                                        <ComboBoxItem Content="🤖 DeepSeek"/>
-                                        <ComboBoxItem Content="🔮 YandexGPT"/>
-                                    </ComboBox>
+                        <!-- Панель ввода сообщения -->
+                        <Border Grid.Row="1"
+                               Background="#15FFFFFF"
+                               CornerRadius="12"
+                               Padding="15"
+                               BorderBrush="#30FFFFFF"
+                               BorderThickness="1">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
 
-                                    <!-- Agent Selector -->
-                                    <ComboBox x:Name="AgentComboBox"
-                                             Grid.Column="1"
-                                             VerticalAlignment="Center"
-                                             Margin="0,0,5,0"
-                                             Width="180"
-                                             Background="#30FFFFFF"
-                                             Foreground="White"
-                                             BorderBrush="#30FFFFFF"
-                                             DisplayMemberPath="Name"
-                                             SelectedValuePath="Id">
-                                        <ComboBox.ItemContainerStyle>
-                                            <Style TargetType="ComboBoxItem">
-                                                <Setter Property="Foreground" Value="White"/>
-                                            </Style>
-                                        </ComboBox.ItemContainerStyle>
-                                    </ComboBox>
+                                <!-- AI Provider Selector -->
+                                <ComboBox x:Name="AiProviderComboBox"
+                                         Grid.Column="0"
+                                         VerticalAlignment="Center"
+                                         Margin="0,0,10,0"
+                                         Width="150"
+                                         Background="#30FFFFFF"
+                                         Foreground="White"
+                                         BorderBrush="#30FFFFFF"
+                                         SelectedIndex="0"
+                                         SelectionChanged="AiProviderComboBox_SelectionChanged">
+                                    <ComboBoxItem Content="💻 ChatGPT"/>
+                                    <ComboBoxItem Content="🤖 DeepSeek"/>
+                                    <ComboBoxItem Content="🔮 YandexGPT"/>
+                                </ComboBox>
 
-                                    <!-- Multi-Agent Selection Button -->
-                                    <Button x:Name="SelectAgentsButton"
-                                           Grid.Column="2"
-                                           Content="👥"
-                                           Width="35"
-                                           Height="35"
-                                           Background="#30FFFFFF"
-                                           BorderBrush="#40FFFFFF"
-                                           BorderThickness="1"
-                                           Foreground="White"
-                                           FontSize="16"
-                                           Cursor="Hand"
-                                           Margin="0,0,15,0"
-                                           ToolTip="Выбрать несколько агентов"
-                                           Click="SelectAgentsButton_Click">
-                                        <Button.Template>
-                                            <ControlTemplate TargetType="Button">
-                                                <Border Background="{TemplateBinding Background}"
-                                                       BorderBrush="{TemplateBinding BorderBrush}"
-                                                       BorderThickness="{TemplateBinding BorderThickness}"
-                                                       CornerRadius="8">
-                                                    <ContentPresenter HorizontalAlignment="Center"
-                                                                    VerticalAlignment="Center"/>
-                                                </Border>
-                                                <ControlTemplate.Triggers>
-                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter Property="Background" Value="#40FFFFFF"/>
-                                                    </Trigger>
-                                                </ControlTemplate.Triggers>
-                                            </ControlTemplate>
-                                        </Button.Template>
-                                    </Button>
+                                <!-- Текстовое поле -->
+                                <TextBox x:Name="InputTextBox"
+                                        Grid.Column="1"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Foreground="White"
+                                        FontSize="14"
+                                        VerticalAlignment="Center"
+                                        Text="Введите ваше сообщение..."
+                                        GotFocus="InputTextBox_GotFocus"
+                                        LostFocus="InputTextBox_LostFocus"
+                                        Margin="0,0,10,0"/>
 
-                                    <!-- Текстовое поле -->
-                                    <TextBox x:Name="InputTextBox"
-                                            Grid.Column="3"
-                                            Background="Transparent"
-                                            BorderThickness="0"
-                                            Foreground="#AAAAAA"
-                                            FontSize="14"
-                                            VerticalAlignment="Center"
-                                            Text="Расскажите нам о своих возможностях"
-                                            GotFocus="InputTextBox_GotFocus"
-                                            LostFocus="InputTextBox_LostFocus"/>
-
-                                    <!-- Кнопка отправки -->
-                                    <Button x:Name="SendButton"
-                                           Grid.Column="4"
-                                           Width="40"
-                                           Height="40"
-                                           BorderThickness="0"
-                                           Cursor="Hand"
-                                           Foreground="White"
-                                           Click="SendButton_Click">
-                                        <Button.Background>
-                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                                <GradientStop Color="#FFF5F0" Offset="0"/>
-                                                <GradientStop Color="#FFDAB9" Offset="0.5"/>
-                                                <GradientStop Color="#EC4899" Offset="1"/>
-                                            </LinearGradientBrush>
-                                        </Button.Background>
-                                        <Button.Template>
-                                            <ControlTemplate TargetType="{x:Type Button}">
-                                                <Border CornerRadius="20"
-                                                       Width="{TemplateBinding Width}"
-                                                       Height="{TemplateBinding Height}">
-                                                    <Border.Background>
-                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                                            <GradientStop Color="#FFF5F0" Offset="0"/>
-                                                            <GradientStop Color="#FFDAB9" Offset="0.5"/>
-                                                            <GradientStop Color="#EC4899" Offset="1"/>
-                                                        </LinearGradientBrush>
-                                                    </Border.Background>
-                                                    <ContentPresenter HorizontalAlignment="Center"
-                                                                    VerticalAlignment="Center"/>
-                                                </Border>
-                                                <ControlTemplate.Triggers>
-                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter Property="Opacity" Value="0.8"/>
-                                                    </Trigger>
-                                                </ControlTemplate.Triggers>
-                                            </ControlTemplate>
-                                        </Button.Template>
-                                        <TextBlock Text="→"
-                                                  FontSize="30"
-                                                  Foreground="White"
-                                                  FontWeight="Bold" Height="39" FontFamily="Arial Black"/>
-                                    </Button>
-                                </Grid>
-                            </Border>
-                        </Grid>
-
-                        <!-- Быстрые действия -->
-                        <StackPanel Orientation="Horizontal"
-                                   HorizontalAlignment="Center"
-                                   Margin="0,30,0,0">
-                            <!-- Поиск поставщиков -->
-                            <Border Background="#15FFFFFF"
-                                   CornerRadius="10"
-                                   Padding="20,15"
-                                   Margin="0,0,15,0"
-                                   Width="250"
-                                   Cursor="Hand">
-                                <Grid>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-
-                                    <Border Grid.Row="0" Grid.RowSpan="2"
-                                           Width="40"
-                                           Height="40"
-                                           CornerRadius="8"
-                                           VerticalAlignment="Center"
-                                           Margin="0,0,12,0">
-                                        <Border.Background>
-                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                                <GradientStop Color="#FFF5F0" Offset="0"/>
-                                                <GradientStop Color="#FFDAB9" Offset="0.5"/>
-                                                <GradientStop Color="#EC4899" Offset="1"/>
-                                            </LinearGradientBrush>
-                                        </Border.Background>
-                                        <TextBlock Text="🚚"
-                                                  FontSize="20"
-                                                  HorizontalAlignment="Center"
-                                                  VerticalAlignment="Center" Foreground="White"/>
-                                    </Border>
-
-                                    <TextBlock Grid.Row="0" Grid.Column="1"
-                                              Text="Search"
-                                              FontSize="14"
-                                              FontWeight="SemiBold"
-                                              Foreground="White"/>
-                                    <TextBlock Grid.Row="1" Grid.Column="1"
-                                              Text="for suppliers"
-                                              FontSize="12"
-                                              Foreground="#AAAAAA"
-                                              Margin="0,2,0,0"/>
-                                </Grid>
-                            </Border>
-
-                            <!-- Выбор материалов -->
-                            <Border Background="#15FFFFFF"
-                                   CornerRadius="10"
-                                   Padding="20,15"
-                                   Margin="0,0,15,0"
-                                   Width="250"
-                                   Cursor="Hand">
-                                <Grid>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-
-                                    <Border Grid.Row="0" Grid.RowSpan="2"
-                                           Width="40"
-                                           Height="40"
-                                           CornerRadius="8"
-                                           VerticalAlignment="Center"
-                                           Margin="0,0,12,0">
-                                        <Border.Background>
-                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                                <GradientStop Color="#FFF5F0" Offset="0"/>
-                                                <GradientStop Color="#FFDAB9" Offset="0.5"/>
-                                                <GradientStop Color="#EC4899" Offset="1"/>
-                                            </LinearGradientBrush>
-                                        </Border.Background>
-                                        <TextBlock Text="💎"
-                                                  FontSize="20"
-                                                  HorizontalAlignment="Center"
-                                                  VerticalAlignment="Center" Foreground="White"/>
-                                    </Border>
-
-                                    <TextBlock Grid.Row="0" Grid.Column="1"
-                                              Text="Select materials"
-                                              FontSize="14"
-                                              FontWeight="SemiBold"
-                                              Foreground="White"/>
-                                    <TextBlock Grid.Row="1" Grid.Column="1"
-                                              Text="Build from scratch"
-                                              FontSize="12"
-                                              Foreground="#AAAAAA"
-                                              Margin="0,2,0,0"/>
-                                </Grid>
-                            </Border>
-
-                            <!-- Расчет стоимости -->
-                            <Border Background="#15FFFFFF"
-                                   CornerRadius="10"
-                                   Padding="20,15"
-                                   Width="250"
-                                   Cursor="Hand">
-                                <Grid>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-
-                                    <Border Grid.Row="0" Grid.RowSpan="2"
-                                           Width="40"
-                                           Height="40"
-                                           CornerRadius="8"
-                                           VerticalAlignment="Center"
-                                           Margin="0,0,12,0">
-                                        <Border.Background>
-                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                                <GradientStop Color="#FFF5F0" Offset="0"/>
-                                                <GradientStop Color="#FFDAB9" Offset="0.5"/>
-                                                <GradientStop Color="#EC4899" Offset="1"/>
-                                            </LinearGradientBrush>
-                                        </Border.Background>
-                                        <TextBlock Text="💰"
-                                                  FontSize="20"
-                                                  HorizontalAlignment="Center"
-                                                  VerticalAlignment="Center" Foreground="White"/>
-                                    </Border>
-
-                                    <TextBlock Grid.Row="0" Grid.Column="1"
-                                              Text="Calculation"
-                                              FontSize="14"
-                                              FontWeight="SemiBold"
-                                              Foreground="White"/>
-                                    <TextBlock Grid.Row="1" Grid.Column="1"
-                                              Text="of the cost"
-                                              FontSize="12"
-                                              Foreground="#AAAAAA"
-                                              Margin="0,2,0,0"/>
-                                </Grid>
-                            </Border>
-                        </StackPanel>
-                    </StackPanel>
+                                <!-- Кнопка отправки -->
+                                <Button x:Name="SendButton"
+                                       Grid.Column="2"
+                                       Width="40"
+                                       Height="40"
+                                       BorderThickness="0"
+                                       Cursor="Hand"
+                                       Foreground="White"
+                                       Click="SendButton_Click">
+                                    <Button.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                            <GradientStop Color="#FFF5F0" Offset="0"/>
+                                            <GradientStop Color="#FFDAB9" Offset="0.5"/>
+                                            <GradientStop Color="#EC4899" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Button.Background>
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="{x:Type Button}">
+                                            <Border CornerRadius="20"
+                                                   Width="{TemplateBinding Width}"
+                                                   Height="{TemplateBinding Height}">
+                                                <Border.Background>
+                                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                        <GradientStop Color="#FFF5F0" Offset="0"/>
+                                                        <GradientStop Color="#FFDAB9" Offset="0.5"/>
+                                                        <GradientStop Color="#EC4899" Offset="1"/>
+                                                    </LinearGradientBrush>
+                                                </Border.Background>
+                                                <ContentPresenter HorizontalAlignment="Center"
+                                                                VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Opacity" Value="0.8"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                    <TextBlock Text="→"
+                                              FontSize="24"
+                                              Foreground="White"
+                                              FontWeight="Bold"/>
+                                </Button>
+                            </Grid>
+                        </Border>
+                    </Grid>
                 </Grid>
             </Grid>
         </Grid>

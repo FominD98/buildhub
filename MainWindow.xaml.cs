@@ -9,12 +9,13 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using BuildHub.Models;
+using System.Collections.ObjectModel;
 
 namespace BuildHub
 {
     public partial class MainWindow : Window
     {
-        private const string PlaceholderText = "Расскажите нам о своих возможностях";
+        private const string PlaceholderText = "Введите ваше сообщение...";
         private const string SearchPlaceholder = "Search";
         private AiServiceFactory _aiServiceFactory;
         private IAiService? _currentAiService;
@@ -23,6 +24,7 @@ namespace BuildHub
         private readonly AgentExecutor _agentExecutor;
         private string _currentSearchQuery = string.Empty;
         private List<Guid> _selectedAgentIds = new List<Guid>();
+        private ObservableCollection<ChatMessage> _chatMessages = new ObservableCollection<ChatMessage>();
 
         public MainWindow()
         {
@@ -33,6 +35,16 @@ namespace BuildHub
             InitializeAiServices();
             LoadProjects();
             LoadAgents();
+            InitializeChat();
+        }
+
+        private void InitializeChat()
+        {
+            ChatMessagesControl.ItemsSource = _chatMessages;
+
+            // Добавляем приветственное сообщение
+            _chatMessages.Add(new ChatMessage(MessageRole.Assistant,
+                "Привет! Я BuildHub AI ассистент. Чем могу помочь?"));
         }
 
         private void InitializeAiServices()
@@ -48,12 +60,40 @@ namespace BuildHub
         {
             var agents = _agentManager.GetAllAgents();
 
-            // Создаем специальный элемент "Без агента"
-            var agentList = new List<object> { new { Id = Guid.Empty, Name = "Без агента (прямой запрос)" } };
-            agentList.AddRange(agents);
+            // Очищаем панель чекбоксов
+            AgentCheckboxesPanel.Children.Clear();
 
-            AgentComboBox.ItemsSource = agentList;
-            AgentComboBox.SelectedIndex = 0; // По умолчанию "Без агента"
+            // Создаем чекбоксы для каждого агента
+            foreach (var agent in agents)
+            {
+                var checkbox = new CheckBox
+                {
+                    Content = agent.Name,
+                    Tag = agent.Id,
+                    Foreground = new SolidColorBrush(Colors.White),
+                    Margin = new Thickness(0, 0, 15, 5),
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+
+                checkbox.Checked += AgentCheckbox_Changed;
+                checkbox.Unchecked += AgentCheckbox_Changed;
+
+                AgentCheckboxesPanel.Children.Add(checkbox);
+            }
+        }
+
+        private void AgentCheckbox_Changed(object sender, RoutedEventArgs e)
+        {
+            // Обновляем список выбранных агентов
+            _selectedAgentIds.Clear();
+
+            foreach (CheckBox checkbox in AgentCheckboxesPanel.Children)
+            {
+                if (checkbox.IsChecked == true && checkbox.Tag is Guid agentId)
+                {
+                    _selectedAgentIds.Add(agentId);
+                }
+            }
         }
 
         private void LoadProjects(string searchQuery = "")
@@ -136,25 +176,38 @@ namespace BuildHub
         {
             if (InputTextBox.Text == PlaceholderText || string.IsNullOrWhiteSpace(InputTextBox.Text))
             {
-                MessageBox.Show("Пожалуйста, введите ваш вопрос", "Внимание", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             var userMessage = InputTextBox.Text;
 
+            // Добавляем сообщение пользователя в чат
+            _chatMessages.Add(new ChatMessage(MessageRole.User, userMessage));
+
+            // Очищаем поле ввода
+            InputTextBox.Text = string.Empty;
+
             // Отключаем кнопку и поле ввода во время запроса
             SendButton.IsEnabled = false;
             InputTextBox.IsEnabled = false;
-            AgentComboBox.IsEnabled = false;
             AiProviderComboBox.IsEnabled = false;
-            SelectAgentsButton.IsEnabled = false;
-            InputTextBox.Text = "Отправка запроса...";
-            InputTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#AAAAAA"));
+            AgentCheckboxesPanel.IsEnabled = false;
+
+            // Добавляем индикатор "думает"
+            var thinkingMessage = new ChatMessage(MessageRole.Assistant, "Обрабатываю запрос...")
+            {
+                IsThinking = true
+            };
+            _chatMessages.Add(thinkingMessage);
+
+            // Прокручиваем вниз
+            ScrollToBottom();
 
             try
             {
-                string response;
-                string sourceInfo;
+
+                // Удаляем индикатор "думает"
+                _chatMessages.Remove(thinkingMessage);
 
                 // Проверяем, выбрано ли несколько агентов
                 if (_selectedAgentIds.Count > 1)
@@ -177,34 +230,28 @@ namespace BuildHub
 
                     var results = await Task.WhenAll(tasks);
 
-                    // Формируем комбинированный ответ
-                    var responseBuilder = new System.Text.StringBuilder();
-                    responseBuilder.AppendLine($"Результаты от {results.Length} агентов:\n");
-
+                    // Добавляем ответы от каждого агента в чат
                     foreach (var (agentName, task) in results)
                     {
-                        responseBuilder.AppendLine($"━━━━━━━━━━━━━━━━━━━━━━━━");
-                        responseBuilder.AppendLine($"Агент: {agentName}");
-                        responseBuilder.AppendLine($"━━━━━━━━━━━━━━━━━━━━━━━━");
-
+                        string content;
                         if (task.Status == Models.TaskStatus.Completed)
                         {
-                            responseBuilder.AppendLine(task.Response ?? "Нет ответа");
+                            content = task.Response ?? "Нет ответа";
                         }
                         else if (task.Status == Models.TaskStatus.Failed)
                         {
-                            responseBuilder.AppendLine($"❌ Ошибка: {task.ErrorMessage}");
+                            content = $"❌ Ошибка: {task.ErrorMessage}";
                         }
                         else
                         {
-                            responseBuilder.AppendLine("⚠️ Задача была отменена");
+                            content = "⚠️ Задача была отменена";
                         }
 
-                        responseBuilder.AppendLine();
+                        _chatMessages.Add(new ChatMessage(MessageRole.Assistant, content, agentName));
+                        ScrollToBottom();
                     }
 
-                    response = responseBuilder.ToString();
-                    sourceInfo = "Множественное выполнение";
+                    return; // Выходим из метода, сообщения уже добавлены
                 }
                 // Проверяем, выбран ли один агент
                 else if (_selectedAgentIds.Count == 1)
@@ -215,126 +262,97 @@ namespace BuildHub
                     {
                         var task = await _agentExecutor.ExecuteTaskAsync(agent, userMessage);
 
+                        string content;
                         if (task.Status == Models.TaskStatus.Completed)
                         {
-                            response = task.Response ?? "Нет ответа";
-                            sourceInfo = $"Агент: {agent.Name}";
+                            content = task.Response ?? "Нет ответа";
                         }
                         else if (task.Status == Models.TaskStatus.Failed)
                         {
-                            MessageBox.Show($"Ошибка выполнения задачи агентом:\n{task.ErrorMessage}",
-                                "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                            return;
+                            content = $"❌ Ошибка: {task.ErrorMessage}";
                         }
                         else
                         {
-                            MessageBox.Show("Задача была отменена", "Отменено",
-                                MessageBoxButton.OK, MessageBoxImage.Information);
-                            return;
+                            content = "⚠️ Задача была отменена";
                         }
+
+                        _chatMessages.Add(new ChatMessage(MessageRole.Assistant, content, agent.Name));
+                        ScrollToBottom();
+                        return;
                     }
                     else
                     {
-                        MessageBox.Show("Выбранный агент не найден", "Ошибка",
-                            MessageBoxButton.OK, MessageBoxImage.Error);
+                        _chatMessages.Add(new ChatMessage(MessageRole.Assistant, "❌ Выбранный агент не найден"));
+                        ScrollToBottom();
                         return;
                     }
                 }
-                // Проверяем, выбран ли агент через ComboBox
+                // Нет выбранных агентов - прямой запрос к AI провайдеру
                 else
                 {
-                    var selectedAgentValue = AgentComboBox.SelectedValue;
-                    if (selectedAgentValue is Guid agentId && agentId != Guid.Empty)
-                    {
-                        // Используем агента из ComboBox
-                        var agent = _agentManager.GetAgent(agentId);
-                        if (agent != null)
-                        {
-                            var task = await _agentExecutor.ExecuteTaskAsync(agent, userMessage);
+                    UpdateAiProvider();
 
-                            if (task.Status == Models.TaskStatus.Completed)
-                            {
-                                response = task.Response ?? "Нет ответа";
-                                sourceInfo = $"Агент: {agent.Name}";
-                            }
-                            else if (task.Status == Models.TaskStatus.Failed)
-                            {
-                                MessageBox.Show($"Ошибка выполнения задачи агентом:\n{task.ErrorMessage}",
-                                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                                return;
-                            }
-                            else
-                            {
-                                MessageBox.Show("Задача была отменена", "Отменено",
-                                    MessageBoxButton.OK, MessageBoxImage.Information);
-                                return;
-                            }
-                        }
-                        else
-                        {
-                            MessageBox.Show("Выбранный агент не найден", "Ошибка",
-                                MessageBoxButton.OK, MessageBoxImage.Error);
-                            return;
-                        }
+                    if (_currentAiService != null)
+                    {
+                        var response = await _currentAiService.SendMessageAsync(userMessage);
+                        _chatMessages.Add(new ChatMessage(MessageRole.Assistant, response));
                     }
                     else
                     {
-                        // Прямой запрос без агента
-                        UpdateAiProvider();
-
-                        if (_currentAiService != null)
-                        {
-                            response = await _currentAiService.SendMessageAsync(userMessage);
-                            sourceInfo = $"Провайдер: {_currentAiService.GetServiceName()}";
-                        }
-                        else
-                        {
-                            MessageBox.Show("AI сервис не инициализирован", "Ошибка",
-                                MessageBoxButton.OK, MessageBoxImage.Error);
-                            return;
-                        }
+                        _chatMessages.Add(new ChatMessage(MessageRole.Assistant, "❌ AI сервис не инициализирован"));
                     }
-                }
 
-                // Показываем ответ
-                MessageBox.Show($"{sourceInfo}\n\n{response}",
-                    "Ответ AI", MessageBoxButton.OK, MessageBoxImage.Information);
+                    ScrollToBottom();
+                }
             }
             catch (OperationCanceledException)
             {
-                MessageBox.Show("Запрос был отменен", "Отменено",
-                              MessageBoxButton.OK, MessageBoxImage.Information);
+                _chatMessages.Remove(thinkingMessage);
+                _chatMessages.Add(new ChatMessage(MessageRole.Assistant, "⚠️ Запрос был отменен"));
+                ScrollToBottom();
             }
             catch (ArgumentException ex)
             {
-                MessageBox.Show($"Некорректные данные: {ex.Message}", "Ошибка валидации",
-                              MessageBoxButton.OK, MessageBoxImage.Warning);
+                _chatMessages.Remove(thinkingMessage);
+                _chatMessages.Add(new ChatMessage(MessageRole.Assistant, $"❌ Некорректные данные: {ex.Message}"));
+                ScrollToBottom();
             }
             catch (HttpRequestException ex)
             {
-                MessageBox.Show($"Ошибка сети при обращении к API:\n{ex.Message}\n\nПроверьте подключение к интернету и API ключи.",
-                              "Сетевая ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                _chatMessages.Remove(thinkingMessage);
+                _chatMessages.Add(new ChatMessage(MessageRole.Assistant,
+                    $"❌ Ошибка сети: {ex.Message}\n\nПроверьте подключение к интернету и API ключи."));
+                ScrollToBottom();
             }
             catch (InvalidOperationException ex)
             {
-                MessageBox.Show($"Ошибка обработки ответа API:\n{ex.Message}\n\nВозможно, формат ответа API изменился.",
-                              "Ошибка обработки", MessageBoxButton.OK, MessageBoxImage.Error);
+                _chatMessages.Remove(thinkingMessage);
+                _chatMessages.Add(new ChatMessage(MessageRole.Assistant,
+                    $"❌ Ошибка обработки: {ex.Message}"));
+                ScrollToBottom();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Непредвиденная ошибка:\n{ex.Message}\n\nТип: {ex.GetType().Name}",
-                              "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                _chatMessages.Remove(thinkingMessage);
+                _chatMessages.Add(new ChatMessage(MessageRole.Assistant,
+                    $"❌ Непредвиденная ошибка: {ex.Message}"));
+                ScrollToBottom();
             }
             finally
             {
                 // Восстанавливаем состояние
                 SendButton.IsEnabled = true;
                 InputTextBox.IsEnabled = true;
-                AgentComboBox.IsEnabled = true;
                 AiProviderComboBox.IsEnabled = true;
-                SelectAgentsButton.IsEnabled = true;
-                InputTextBox.Text = PlaceholderText;
-                InputTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#AAAAAA"));
+                AgentCheckboxesPanel.IsEnabled = true;
+            }
+        }
+
+        private void ScrollToBottom()
+        {
+            if (ChatScrollViewer != null)
+            {
+                ChatScrollViewer.ScrollToEnd();
             }
         }
 
@@ -354,11 +372,8 @@ namespace BuildHub
 
         private void AiProviderComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // Когда меняется провайдер, сбрасываем выбор агента на "Без агента"
-            if (AgentComboBox != null)
-            {
-                AgentComboBox.SelectedIndex = 0;
-            }
+            // Обновляем текущий AI провайдер
+            UpdateAiProvider();
         }
 
         private void AddProjectButton_Click(object sender, RoutedEventArgs e)
@@ -367,47 +382,6 @@ namespace BuildHub
             if (createWindow.ShowDialog() == true)
             {
                 LoadProjects(_currentSearchQuery);
-            }
-        }
-
-        private void SelectAgentsButton_Click(object sender, RoutedEventArgs e)
-        {
-            var selectWindow = new SelectAgentsWindow(_selectedAgentIds);
-            if (selectWindow.ShowDialog() == true)
-            {
-                _selectedAgentIds = selectWindow.SelectedAgentIds;
-                UpdateAgentSelectionDisplay();
-            }
-        }
-
-        private void UpdateAgentSelectionDisplay()
-        {
-            if (_selectedAgentIds.Count == 0)
-            {
-                AgentComboBox.SelectedIndex = 0; // "Без агента"
-            }
-            else if (_selectedAgentIds.Count == 1)
-            {
-                var agent = _agentManager.GetAgent(_selectedAgentIds[0]);
-                if (agent != null)
-                {
-                    // Находим индекс агента в ComboBox
-                    var agentList = AgentComboBox.ItemsSource as List<object>;
-                    if (agentList != null)
-                    {
-                        var index = agentList.FindIndex(item =>
-                        {
-                            if (item is Agent a) return a.Id == agent.Id;
-                            return false;
-                        });
-                        if (index >= 0) AgentComboBox.SelectedIndex = index;
-                    }
-                }
-            }
-            else
-            {
-                // Множественный выбор - обновляем текст в ComboBox
-                AgentComboBox.SelectedIndex = -1;
             }
         }
 
