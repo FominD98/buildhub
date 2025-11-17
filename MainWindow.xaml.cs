@@ -189,34 +189,50 @@ namespace BuildHub
 
         private async void SendButton_Click(object sender, RoutedEventArgs e)
         {
+            Console.WriteLine("=== SendButton_Click STARTED ===");
+
             // Определяем, какой TextBox используется (стартовая страница или чат)
             TextBox activeTextBox = null;
             Button activeButton = null;
+
+            Console.WriteLine($"InputTextBox: exists={InputTextBox != null}, IsVisible={InputTextBox?.IsVisible}");
+            Console.WriteLine($"ChatInputTextBox: exists={ChatInputTextBox != null}, IsVisible={ChatInputTextBox?.IsVisible}");
 
             if (InputTextBox != null && InputTextBox.IsVisible)
             {
                 activeTextBox = InputTextBox;
                 activeButton = SendButton;
+                Console.WriteLine("✓ Using InputTextBox (welcome screen)");
             }
             else if (ChatInputTextBox != null && ChatInputTextBox.IsVisible)
             {
                 activeTextBox = ChatInputTextBox;
                 activeButton = ChatSendButton;
+                Console.WriteLine("✓ Using ChatInputTextBox (chat mode)");
             }
             else
             {
+                Console.WriteLine("✗ ERROR: No visible TextBox found!");
                 return;
             }
 
+            Console.WriteLine($"Text in box: '{activeTextBox.Text}'");
+            Console.WriteLine($"PlaceholderText: '{PlaceholderText}'");
+            Console.WriteLine($"Match placeholder: {activeTextBox.Text == PlaceholderText}");
+            Console.WriteLine($"IsNullOrWhiteSpace: {string.IsNullOrWhiteSpace(activeTextBox.Text)}");
+
             if (activeTextBox.Text == PlaceholderText || string.IsNullOrWhiteSpace(activeTextBox.Text))
             {
+                Console.WriteLine("✗ Validation FAILED: text is placeholder or empty");
                 return;
             }
 
             var userMessage = activeTextBox.Text;
+            Console.WriteLine($"✓ User message accepted: '{userMessage}'");
 
             // Добавляем сообщение пользователя в чат
             _chatMessages.Add(new ChatMessage(MessageRole.User, userMessage));
+            Console.WriteLine($"✓ Added user message. Total messages: {_chatMessages.Count}");
 
             // Очищаем поле ввода
             activeTextBox.Text = string.Empty;
@@ -233,19 +249,24 @@ namespace BuildHub
                 IsThinking = true
             };
             _chatMessages.Add(thinkingMessage);
+            Console.WriteLine($"✓ Added thinking message. Total: {_chatMessages.Count}");
 
             // Прокручиваем вниз
             ScrollToBottom();
 
             try
             {
+                Console.WriteLine("→ Starting async processing...");
 
                 // Удаляем индикатор "думает"
                 _chatMessages.Remove(thinkingMessage);
 
                 // Проверяем, выбрано ли несколько агентов
+                Console.WriteLine($"Selected agents: {_selectedAgentIds.Count}");
+
                 if (_selectedAgentIds.Count > 1)
                 {
+                    Console.WriteLine($"→ BRANCH: Multiple agents ({_selectedAgentIds.Count})");
                     // Множественное выполнение агентов параллельно
                     var tasks = new List<Task<(string AgentName, AgentTask Task)>>();
 
@@ -254,6 +275,7 @@ namespace BuildHub
                         var agent = _agentManager.GetAgent(agentId);
                         if (agent != null)
                         {
+                            Console.WriteLine($"  Adding agent task: {agent.Name}");
                             tasks.Add(Task.Run(async () =>
                             {
                                 var task = await _agentExecutor.ExecuteTaskAsync(agent, userMessage);
@@ -262,6 +284,7 @@ namespace BuildHub
                         }
                     }
 
+                    Console.WriteLine($"  Waiting for {tasks.Count} agents...");
                     var results = await Task.WhenAll(tasks);
 
                     // Добавляем ответы от каждого агента в чат
@@ -290,32 +313,39 @@ namespace BuildHub
                 // Проверяем, выбран ли один агент
                 else if (_selectedAgentIds.Count == 1)
                 {
+                    Console.WriteLine($"→ BRANCH: Single agent");
                     // Используем выбранного агента из списка
                     var agent = _agentManager.GetAgent(_selectedAgentIds[0]);
                     if (agent != null)
                     {
+                        Console.WriteLine($"  Executing agent: {agent.Name}");
                         var task = await _agentExecutor.ExecuteTaskAsync(agent, userMessage);
 
                         string content;
                         if (task.Status == Models.TaskStatus.Completed)
                         {
                             content = task.Response ?? "Нет ответа";
+                            Console.WriteLine($"  ✓ Agent completed: {content.Substring(0, Math.Min(50, content.Length))}...");
                         }
                         else if (task.Status == Models.TaskStatus.Failed)
                         {
                             content = $"❌ Ошибка: {task.ErrorMessage}";
+                            Console.WriteLine($"  ✗ Agent failed: {task.ErrorMessage}");
                         }
                         else
                         {
                             content = "⚠️ Задача была отменена";
+                            Console.WriteLine($"  ⚠ Agent cancelled");
                         }
 
                         _chatMessages.Add(new ChatMessage(MessageRole.Assistant, content, agent.Name));
                         ScrollToBottom();
+                        Console.WriteLine($"✓ Response added. Total messages: {_chatMessages.Count}");
                         return;
                     }
                     else
                     {
+                        Console.WriteLine("  ✗ Agent not found!");
                         _chatMessages.Add(new ChatMessage(MessageRole.Assistant, "❌ Выбранный агент не найден"));
                         ScrollToBottom();
                         return;
@@ -324,35 +354,43 @@ namespace BuildHub
                 // Нет выбранных агентов - прямой запрос к AI провайдеру
                 else
                 {
+                    Console.WriteLine($"→ BRANCH: No agents - direct AI call");
                     UpdateAiProvider();
 
                     if (_currentAiService != null)
                     {
+                        Console.WriteLine($"  Calling {_currentAiService.GetServiceName()}...");
                         var response = await _currentAiService.SendMessageAsync(userMessage);
+                        Console.WriteLine($"  ✓ Got response: {response.Substring(0, Math.Min(50, response.Length))}...");
                         _chatMessages.Add(new ChatMessage(MessageRole.Assistant, response));
                     }
                     else
                     {
+                        Console.WriteLine("  ✗ AI service is null!");
                         _chatMessages.Add(new ChatMessage(MessageRole.Assistant, "❌ AI сервис не инициализирован"));
                     }
 
                     ScrollToBottom();
+                    Console.WriteLine($"✓ Response added. Total messages: {_chatMessages.Count}");
                 }
             }
             catch (OperationCanceledException)
             {
+                Console.WriteLine("✗ EXCEPTION: OperationCanceledException");
                 _chatMessages.Remove(thinkingMessage);
                 _chatMessages.Add(new ChatMessage(MessageRole.Assistant, "⚠️ Запрос был отменен"));
                 ScrollToBottom();
             }
             catch (ArgumentException ex)
             {
+                Console.WriteLine($"✗ EXCEPTION: ArgumentException - {ex.Message}");
                 _chatMessages.Remove(thinkingMessage);
                 _chatMessages.Add(new ChatMessage(MessageRole.Assistant, $"❌ Некорректные данные: {ex.Message}"));
                 ScrollToBottom();
             }
             catch (HttpRequestException ex)
             {
+                Console.WriteLine($"✗ EXCEPTION: HttpRequestException - {ex.Message}");
                 _chatMessages.Remove(thinkingMessage);
                 _chatMessages.Add(new ChatMessage(MessageRole.Assistant,
                     $"❌ Ошибка сети: {ex.Message}\n\nПроверьте подключение к интернету и API ключи."));
@@ -360,6 +398,7 @@ namespace BuildHub
             }
             catch (InvalidOperationException ex)
             {
+                Console.WriteLine($"✗ EXCEPTION: InvalidOperationException - {ex.Message}");
                 _chatMessages.Remove(thinkingMessage);
                 _chatMessages.Add(new ChatMessage(MessageRole.Assistant,
                     $"❌ Ошибка обработки: {ex.Message}"));
@@ -367,6 +406,8 @@ namespace BuildHub
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"✗ EXCEPTION: {ex.GetType().Name} - {ex.Message}");
+                Console.WriteLine($"  Stack trace: {ex.StackTrace}");
                 _chatMessages.Remove(thinkingMessage);
                 _chatMessages.Add(new ChatMessage(MessageRole.Assistant,
                     $"❌ Непредвиденная ошибка: {ex.Message}"));
@@ -374,6 +415,7 @@ namespace BuildHub
             }
             finally
             {
+                Console.WriteLine("→ Re-enabling controls...");
                 // Восстанавливаем состояние всех контролов
                 if (SendButton != null) SendButton.IsEnabled = true;
                 if (ChatSendButton != null) ChatSendButton.IsEnabled = true;
@@ -381,6 +423,7 @@ namespace BuildHub
                 if (ChatInputTextBox != null) ChatInputTextBox.IsEnabled = true;
                 if (AiProviderComboBox != null) AiProviderComboBox.IsEnabled = true;
                 if (AgentCheckboxesPanel != null) AgentCheckboxesPanel.IsEnabled = true;
+                Console.WriteLine("=== SendButton_Click FINISHED ===\n");
             }
         }
 
