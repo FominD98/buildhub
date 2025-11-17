@@ -126,6 +126,11 @@
                            Orientation="Horizontal"
                            VerticalAlignment="Center"
                            Margin="0,0,10,0">
+                    <Button Content="🤖"
+                           Style="{StaticResource WindowControlButtonStyle}"
+                           Click="AgentBuilderButton_Click"
+                           ToolTip="Agent Builder"
+                           Margin="0,0,10,0"/>
                     <Button Content="─"
                            Style="{StaticResource WindowControlButtonStyle}"
                            Click="MinimizeButton_Click"

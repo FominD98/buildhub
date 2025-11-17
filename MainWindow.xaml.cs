@@ -22,14 +22,8 @@ namespace BuildHub
 
         private void InitializeAiServices()
         {
-            // TODO: Загрузить из конфигурационного файла или настроек
-            var config = new ApiConfig
-            {
-                OpenAiApiKey = "YOUR_OPENAI_API_KEY",
-                DeepSeekApiKey = "YOUR_DEEPSEEK_API_KEY",
-                YandexApiKey = "YOUR_YANDEX_API_KEY",
-                YandexFolderId = "YOUR_YANDEX_FOLDER_ID"
-            };
+            var configService = ConfigurationService.Instance;
+            var config = configService.GetApiConfig();
 
             _aiServiceFactory = new AiServiceFactory(config);
             _currentAiService = _aiServiceFactory.CreateService(AiProvider.ChatGPT);
@@ -63,6 +57,12 @@ namespace BuildHub
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
+        }
+
+        private void AgentBuilderButton_Click(object sender, RoutedEventArgs e)
+        {
+            var agentBuilderWindow = new AgentBuilderWindow();
+            agentBuilderWindow.Show();
         }
 
         private void InputTextBox_GotFocus(object sender, RoutedEventArgs e)

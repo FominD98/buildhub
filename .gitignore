@@ -79,3 +79,6 @@ orleans.codegen.cs
 
 # Rider
 .idea/
+
+# Agent data
+agents.json
