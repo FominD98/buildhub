@@ -358,6 +358,10 @@ namespace BuildHub
 
         private void UpdateAiProvider()
         {
+            // Защита от вызова во время инициализации XAML
+            if (AiProviderComboBox == null || _aiServiceFactory == null)
+                return;
+
             var selectedIndex = AiProviderComboBox.SelectedIndex;
             var provider = selectedIndex switch
             {
