@@ -409,7 +409,10 @@
                                                                           Text="⋯"
                                                                           FontSize="16"
                                                                           Foreground="#AAAAAA"
-                                                                          VerticalAlignment="Center"/>
+                                                                          VerticalAlignment="Center"
+                                                                          Cursor="Hand"
+                                                                          MouseLeftButtonDown="ProjectMenu_Click"
+                                                                          Tag="{Binding Id}"/>
                                                             </Grid>
                                                         </Border>
                                                     </DataTemplate>

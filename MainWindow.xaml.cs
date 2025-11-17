@@ -651,9 +651,38 @@ namespace BuildHub
             }
         }
 
+        private void ProjectMenu_Click(object sender, MouseButtonEventArgs e)
+        {
+            // Обработчик клика на три точки
+            if (sender is TextBlock textBlock)
+            {
+                // Находим родительский Border с контекстным меню
+                var border = FindParent<Border>(textBlock);
+                if (border?.ContextMenu != null)
+                {
+                    border.ContextMenu.PlacementTarget = textBlock;
+                    border.ContextMenu.IsOpen = true;
+                    e.Handled = true; // Останавливаем событие, чтобы не сработал клик по проекту
+                }
+            }
+        }
+
         private void ProjectItem_RightClick(object sender, MouseButtonEventArgs e)
         {
             // Обработчик правого клика для контекстного меню
+        }
+
+        private static T? FindParent<T>(DependencyObject child) where T : DependencyObject
+        {
+            DependencyObject parentObject = VisualTreeHelper.GetParent(child);
+
+            if (parentObject == null)
+                return null;
+
+            if (parentObject is T parent)
+                return parent;
+
+            return FindParent<T>(parentObject);
         }
 
         private void SearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
