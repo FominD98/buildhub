@@ -19,9 +19,9 @@
     <Window.Resources>
         <local:RectConverter x:Key="RectConverter"/>
         <local:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
-        <local:Converters.MessageAlignmentConverter x:Key="MessageAlignmentConverter"/>
-        <local:Converters.MessageBackgroundConverter x:Key="MessageBackgroundConverter"/>
-        <local:Converters.BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <Converters:MessageAlignmentConverter x:Key="MessageAlignmentConverter"/>
+        <Converters:MessageBackgroundConverter x:Key="MessageBackgroundConverter"/>
+        <Converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
 
         <!-- Стиль для ComboBox -->
         <Style TargetType="{x:Type ComboBox}">
@@ -446,7 +446,6 @@
                 </Border>
 
                 <!-- Правая панель - чат -->
-                <!-- Правая панель - чат -->
                 <Grid Grid.Column="1" Margin="20">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -459,7 +458,6 @@
                               Text="BuildHub AI Assistant"
                               FontSize="24"
                               FontWeight="Bold"
-                              Foreground="White"
                               Margin="0,0,0,20">
                         <TextBlock.Foreground>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
