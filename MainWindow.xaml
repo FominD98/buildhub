@@ -22,6 +22,8 @@
         <Converters:MessageAlignmentConverter x:Key="MessageAlignmentConverter"/>
         <Converters:MessageBackgroundConverter x:Key="MessageBackgroundConverter"/>
         <Converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <Converters:CollectionHasItemsConverter x:Key="CollectionHasItemsConverter"/>
+        <Converters:CollectionEmptyConverter x:Key="CollectionEmptyConverter"/>
 
         <!-- Стиль для ComboBox -->
         <Style TargetType="{x:Type ComboBox}">
@@ -443,108 +445,404 @@
                             </StackPanel>
                         </Border>
                     </Grid>
-                </Border>
+                <!-- Правая панель - с переключением между стартом и чатом -->
+                <Grid Grid.Column="1">
+                    <!-- Стартовая страница (показывается когда чат пустой) -->
+                    <Grid Visibility="{Binding ElementName=ChatMessagesControl, Path=Items.Count, Converter={StaticResource CollectionEmptyConverter}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="433*"/>
+                            <ColumnDefinition Width="91*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
 
-                <!-- Правая панель - чат -->
-                <Grid Grid.Column="1" Margin="20">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
+                        <!-- Анимированная иконка на заднем фоне -->
+                        <Image gif:AnimationBehavior.SourceUri="img/main.gif"
+                               gif:AnimationBehavior.CacheFramesInMemory="True"
+                               gif:AnimationBehavior.AutoStart="True"
+                               RenderOptions.BitmapScalingMode="LowQuality"
+                               Width="400"
+                               Height="400"
+                               VerticalAlignment="Top"
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,0"
+                               Stretch="Uniform"
+                               Opacity="0.9"
+                               Grid.ColumnSpan="2"/>
 
-                    <!-- Заголовок чата -->
-                    <TextBlock Grid.Row="0"
-                              Text="BuildHub AI Assistant"
-                              FontSize="24"
-                              FontWeight="Bold"
-                              Margin="0,0,0,20">
-                        <TextBlock.Foreground>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                <GradientStop Color="#FFF5F0" Offset="0"/>
-                                <GradientStop Color="#FFDAB9" Offset="0.5"/>
-                                <GradientStop Color="#EC4899" Offset="1"/>
-                            </LinearGradientBrush>
-                        </TextBlock.Foreground>
-                    </TextBlock>
+                        <!-- Центральная welcome секция -->
+                        <StackPanel VerticalAlignment="Top"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,234,0,0" Grid.ColumnSpan="2">
 
-                    <!-- Область чата -->
-                    <Border Grid.Row="1"
-                           Background="#15FFFFFF"
-                           CornerRadius="12"
-                           BorderBrush="#30FFFFFF"
-                           BorderThickness="1"
-                           Margin="0,0,0,20">
-                        <ScrollViewer x:Name="ChatScrollViewer"
-                                     VerticalScrollBarVisibility="Auto"
-                                     Padding="15">
-                            <ItemsControl x:Name="ChatMessagesControl">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Margin="0,5"
-                                               HorizontalAlignment="{Binding Role, Converter={StaticResource MessageAlignmentConverter}}"
-                                               MaxWidth="600">
-                                            <Border Background="{Binding Role, Converter={StaticResource MessageBackgroundConverter}}"
-                                                   CornerRadius="12"
-                                                   Padding="15,10">
-                                                <StackPanel>
-                                                    <!-- Имя агента (если есть) -->
-                                                    <TextBlock Text="{Binding AgentName}"
-                                                              FontSize="11"
-                                                              FontWeight="SemiBold"
-                                                              Foreground="#AAAAAA"
-                                                              Margin="0,0,0,5"
-                                                              Visibility="{Binding AgentName, Converter={StaticResource StringToVisibilityConverter}}"/>
+                            <!-- Приветственный текст -->
+                            <TextBlock Text="Добро пожаловать, исследователь!"
+                                      FontSize="42"
+                                      FontWeight="Bold"
+                                      HorizontalAlignment="Center"
+                                      Margin="0,0,0,10">
+                                <TextBlock.Foreground>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                        <GradientStop Color="#FFF5F0" Offset="0"/>
+                                        <GradientStop Color="#FFDAB9" Offset="0.5"/>
+                                        <GradientStop Color="#EC4899" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </TextBlock.Foreground>
+                            </TextBlock>
 
-                                                    <!-- Текст сообщения -->
-                                                    <TextBlock Text="{Binding Content}"
-                                                              FontSize="14"
-                                                              Foreground="White"
-                                                              TextWrapping="Wrap"/>
+                            <TextBlock Text="Что вы хотите проанализировать сегодня?"
+                                      FontSize="16"
+                                      Foreground="#AAAAAA"
+                                      HorizontalAlignment="Center"
+                                      Margin="0,0,0,40"/>
 
-                                                    <!-- Временная метка -->
-                                                    <TextBlock Text="{Binding Timestamp, StringFormat='{}{0:HH:mm}'}"
-                                                              FontSize="10"
-                                                              Foreground="#888888"
-                                                              HorizontalAlignment="Right"
-                                                              Margin="0,5,0,0"/>
-                                                </StackPanel>
-                                            </Border>
+                            <!-- Панель с опциями -->
+                            <Grid HorizontalAlignment="Center" Width="800">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Input область -->
+                                <Border Background="#15FFFFFF"
+                                       CornerRadius="12"
+                                       Padding="20"
+                                       BorderBrush="#30FFFFFF"
+                                       BorderThickness="1">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <!-- Чекбоксы агентов -->
+                                        <Border Grid.Row="0"
+                                               Background="#10FFFFFF"
+                                               CornerRadius="8"
+                                               Padding="10"
+                                               Margin="0,0,0,15">
+                                            <StackPanel>
+                                                <TextBlock Text="Выберите агентов:"
+                                                          FontSize="12"
+                                                          Foreground="#AAAAAA"
+                                                          Margin="0,0,0,8"/>
+                                                <WrapPanel x:Name="AgentCheckboxesPanel">
+                                                    <!-- Чекбоксы будут добавляться динамически -->
+                                                </WrapPanel>
+                                            </StackPanel>
                                         </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </ScrollViewer>
-                    </Border>
 
-                    <!-- Панель ввода с чекбоксами агентов -->
-                    <Grid Grid.Row="2">
+                                        <!-- Поле ввода -->
+                                        <Grid Grid.Row="1">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- AI Provider Selector -->
+                                            <ComboBox x:Name="AiProviderComboBox"
+                                                     Grid.Column="0"
+                                                     VerticalAlignment="Center"
+                                                     Margin="0,0,10,0"
+                                                     Width="150"
+                                                     Background="#30FFFFFF"
+                                                     Foreground="White"
+                                                     BorderBrush="#30FFFFFF"
+                                                     SelectedIndex="0"
+                                                     SelectionChanged="AiProviderComboBox_SelectionChanged">
+                                                <ComboBoxItem Content="💻 ChatGPT"/>
+                                                <ComboBoxItem Content="🤖 DeepSeek"/>
+                                                <ComboBoxItem Content="🔮 YandexGPT"/>
+                                            </ComboBox>
+
+                                            <!-- Текстовое поле -->
+                                            <TextBox x:Name="InputTextBox"
+                                                    Grid.Column="1"
+                                                    Background="Transparent"
+                                                    BorderThickness="0"
+                                                    Foreground="#AAAAAA"
+                                                    FontSize="14"
+                                                    VerticalAlignment="Center"
+                                                    Text="Расскажите нам о своих возможностях"
+                                                    GotFocus="InputTextBox_GotFocus"
+                                                    LostFocus="InputTextBox_LostFocus"/>
+
+                                            <!-- Кнопка отправки -->
+                                            <Button x:Name="SendButton"
+                                                   Grid.Column="2"
+                                                   Width="40"
+                                                   Height="40"
+                                                   BorderThickness="0"
+                                                   Cursor="Hand"
+                                                   Foreground="White"
+                                                   Click="SendButton_Click">
+                                                <Button.Background>
+                                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                        <GradientStop Color="#FFF5F0" Offset="0"/>
+                                                        <GradientStop Color="#FFDAB9" Offset="0.5"/>
+                                                        <GradientStop Color="#EC4899" Offset="1"/>
+                                                    </LinearGradientBrush>
+                                                </Button.Background>
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="{x:Type Button}">
+                                                        <Border CornerRadius="20"
+                                                               Width="{TemplateBinding Width}"
+                                                               Height="{TemplateBinding Height}">
+                                                            <Border.Background>
+                                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                                    <GradientStop Color="#FFF5F0" Offset="0"/>
+                                                                    <GradientStop Color="#FFDAB9" Offset="0.5"/>
+                                                                    <GradientStop Color="#EC4899" Offset="1"/>
+                                                                </LinearGradientBrush>
+                                                            </Border.Background>
+                                                            <ContentPresenter HorizontalAlignment="Center"
+                                                                            VerticalAlignment="Center"/>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter Property="Opacity" Value="0.8"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                                <TextBlock Text="→"
+                                                          FontSize="30"
+                                                          Foreground="White"
+                                                          FontWeight="Bold" Height="39" FontFamily="Arial Black"/>
+                                            </Button>
+                                        </Grid>
+                                    </Grid>
+                                </Border>
+                            </Grid>
+
+                            <!-- Быстрые действия -->
+                            <StackPanel Orientation="Horizontal"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,30,0,0">
+                                <!-- Поиск поставщиков -->
+                                <Border Background="#15FFFFFF"
+                                       CornerRadius="10"
+                                       Padding="20,15"
+                                       Margin="0,0,15,0"
+                                       Width="250"
+                                       Cursor="Hand">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <Border Grid.Row="0" Grid.RowSpan="2"
+                                               Width="40"
+                                               Height="40"
+                                               CornerRadius="8"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,12,0">
+                                            <Border.Background>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                    <GradientStop Color="#FFF5F0" Offset="0"/>
+                                                    <GradientStop Color="#FFDAB9" Offset="0.5"/>
+                                                    <GradientStop Color="#EC4899" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Border.Background>
+                                            <TextBlock Text="🚚"
+                                                      FontSize="20"
+                                                      HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center" Foreground="White"/>
+                                        </Border>
+
+                                        <TextBlock Grid.Row="0" Grid.Column="1"
+                                                  Text="Search"
+                                                  FontSize="14"
+                                                  FontWeight="SemiBold"
+                                                  Foreground="White"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1"
+                                                  Text="for suppliers"
+                                                  FontSize="12"
+                                                  Foreground="#AAAAAA"
+                                                  Margin="0,2,0,0"/>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Выбор материалов -->
+                                <Border Background="#15FFFFFF"
+                                       CornerRadius="10"
+                                       Padding="20,15"
+                                       Margin="0,0,15,0"
+                                       Width="250"
+                                       Cursor="Hand">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <Border Grid.Row="0" Grid.RowSpan="2"
+                                               Width="40"
+                                               Height="40"
+                                               CornerRadius="8"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,12,0">
+                                            <Border.Background>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                    <GradientStop Color="#FFF5F0" Offset="0"/>
+                                                    <GradientStop Color="#FFDAB9" Offset="0.5"/>
+                                                    <GradientStop Color="#EC4899" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Border.Background>
+                                            <TextBlock Text="💎"
+                                                      FontSize="20"
+                                                      HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center" Foreground="White"/>
+                                        </Border>
+
+                                        <TextBlock Grid.Row="0" Grid.Column="1"
+                                                  Text="Select materials"
+                                                  FontSize="14"
+                                                  FontWeight="SemiBold"
+                                                  Foreground="White"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1"
+                                                  Text="Build from scratch"
+                                                  FontSize="12"
+                                                  Foreground="#AAAAAA"
+                                                  Margin="0,2,0,0"/>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Расчет стоимости -->
+                                <Border Background="#15FFFFFF"
+                                       CornerRadius="10"
+                                       Padding="20,15"
+                                       Width="250"
+                                       Cursor="Hand">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <Border Grid.Row="0" Grid.RowSpan="2"
+                                               Width="40"
+                                               Height="40"
+                                               CornerRadius="8"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,12,0">
+                                            <Border.Background>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                    <GradientStop Color="#FFF5F0" Offset="0"/>
+                                                    <GradientStop Color="#FFDAB9" Offset="0.5"/>
+                                                    <GradientStop Color="#EC4899" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Border.Background>
+                                            <TextBlock Text="💰"
+                                                      FontSize="20"
+                                                      HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center" Foreground="White"/>
+                                        </Border>
+
+                                        <TextBlock Grid.Row="0" Grid.Column="1"
+                                                  Text="Calculation"
+                                                  FontSize="14"
+                                                  FontWeight="SemiBold"
+                                                  Foreground="White"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1"
+                                                  Text="of the cost"
+                                                  FontSize="12"
+                                                  Foreground="#AAAAAA"
+                                                  Margin="0,2,0,0"/>
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Интерфейс чата (показывается когда есть сообщения) -->
+                    <Grid Margin="20" Visibility="{Binding ElementName=ChatMessagesControl, Path=Items.Count, Converter={StaticResource CollectionHasItemsConverter}}">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <!-- Чекбоксы агентов -->
-                        <Border Grid.Row="0"
+                        <!-- Заголовок чата -->
+                        <TextBlock Grid.Row="0"
+                                  Text="BuildHub AI Assistant"
+                                  FontSize="24"
+                                  FontWeight="Bold"
+                                  Margin="0,0,0,20">
+                            <TextBlock.Foreground>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                    <GradientStop Color="#FFF5F0" Offset="0"/>
+                                    <GradientStop Color="#FFDAB9" Offset="0.5"/>
+                                    <GradientStop Color="#EC4899" Offset="1"/>
+                                </LinearGradientBrush>
+                            </TextBlock.Foreground>
+                        </TextBlock>
+
+                        <!-- Область чата -->
+                        <Border Grid.Row="1"
                                Background="#15FFFFFF"
-                               CornerRadius="8"
-                               Padding="10"
-                               Margin="0,0,0,10"
+                               CornerRadius="12"
                                BorderBrush="#30FFFFFF"
-                               BorderThickness="1">
-                            <StackPanel>
-                                <TextBlock Text="Выберите агентов:"
-                                          FontSize="12"
-                                          Foreground="#AAAAAA"
-                                          Margin="0,0,0,8"/>
-                                <WrapPanel x:Name="AgentCheckboxesPanel">
-                                    <!-- Чекбоксы будут добавляться динамически -->
-                                </WrapPanel>
-                            </StackPanel>
+                               BorderThickness="1"
+                               Margin="0,0,0,20">
+                            <ScrollViewer x:Name="ChatScrollViewer"
+                                         VerticalScrollBarVisibility="Auto"
+                                         Padding="15">
+                                <ItemsControl x:Name="ChatMessagesControl">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Margin="0,5"
+                                                   HorizontalAlignment="{Binding Role, Converter={StaticResource MessageAlignmentConverter}}"
+                                                   MaxWidth="600">
+                                                <Border Background="{Binding Role, Converter={StaticResource MessageBackgroundConverter}}"
+                                                       CornerRadius="12"
+                                                       Padding="15,10">
+                                                    <StackPanel>
+                                                        <!-- Имя агента (если есть) -->
+                                                        <TextBlock Text="{Binding AgentName}"
+                                                                  FontSize="11"
+                                                                  FontWeight="SemiBold"
+                                                                  Foreground="#AAAAAA"
+                                                                  Margin="0,0,0,5"
+                                                                  Visibility="{Binding AgentName, Converter={StaticResource StringToVisibilityConverter}}"/>
+
+                                                        <!-- Текст сообщения -->
+                                                        <TextBlock Text="{Binding Content}"
+                                                                  FontSize="14"
+                                                                  Foreground="White"
+                                                                  TextWrapping="Wrap"/>
+
+                                                        <!-- Временная метка -->
+                                                        <TextBlock Text="{Binding Timestamp, StringFormat='{}{0:HH:mm}'}"
+                                                                  FontSize="10"
+                                                                  Foreground="#888888"
+                                                                  HorizontalAlignment="Right"
+                                                                  Margin="0,5,0,0"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
                         </Border>
 
-                        <!-- Панель ввода сообщения -->
-                        <Border Grid.Row="1"
+                        <!-- Панель ввода -->
+                        <Border Grid.Row="2"
                                Background="#15FFFFFF"
                                CornerRadius="12"
                                Padding="15"
@@ -552,30 +850,13 @@
                                BorderThickness="1">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
 
-                                <!-- AI Provider Selector -->
-                                <ComboBox x:Name="AiProviderComboBox"
-                                         Grid.Column="0"
-                                         VerticalAlignment="Center"
-                                         Margin="0,0,10,0"
-                                         Width="150"
-                                         Background="#30FFFFFF"
-                                         Foreground="White"
-                                         BorderBrush="#30FFFFFF"
-                                         SelectedIndex="0"
-                                         SelectionChanged="AiProviderComboBox_SelectionChanged">
-                                    <ComboBoxItem Content="💻 ChatGPT"/>
-                                    <ComboBoxItem Content="🤖 DeepSeek"/>
-                                    <ComboBoxItem Content="🔮 YandexGPT"/>
-                                </ComboBox>
-
-                                <!-- Текстовое поле -->
-                                <TextBox x:Name="InputTextBox"
-                                        Grid.Column="1"
+                                <!-- Текстовое поле для чата -->
+                                <TextBox x:Name="ChatInputTextBox"
+                                        Grid.Column="0"
                                         Background="Transparent"
                                         BorderThickness="0"
                                         Foreground="White"
@@ -586,9 +867,9 @@
                                         LostFocus="InputTextBox_LostFocus"
                                         Margin="0,0,10,0"/>
 
-                                <!-- Кнопка отправки -->
-                                <Button x:Name="SendButton"
-                                       Grid.Column="2"
+                                <!-- Кнопка отправки для чата -->
+                                <Button x:Name="ChatSendButton"
+                                       Grid.Column="1"
                                        Width="40"
                                        Height="40"
                                        BorderThickness="0"

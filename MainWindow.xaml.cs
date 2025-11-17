@@ -41,10 +41,7 @@ namespace BuildHub
         private void InitializeChat()
         {
             ChatMessagesControl.ItemsSource = _chatMessages;
-
-            // Добавляем приветственное сообщение
-            _chatMessages.Add(new ChatMessage(MessageRole.Assistant,
-                "Привет! Я BuildHub AI ассистент. Чем могу помочь?"));
+            // Не добавляем приветственное сообщение, чтобы показывать стартовую страницу
         }
 
         private void InitializeAiServices()
@@ -174,24 +171,43 @@ namespace BuildHub
 
         private async void SendButton_Click(object sender, RoutedEventArgs e)
         {
-            if (InputTextBox.Text == PlaceholderText || string.IsNullOrWhiteSpace(InputTextBox.Text))
+            // Определяем, какой TextBox используется (стартовая страница или чат)
+            TextBox activeTextBox = null;
+            Button activeButton = null;
+
+            if (InputTextBox != null && InputTextBox.IsVisible)
+            {
+                activeTextBox = InputTextBox;
+                activeButton = SendButton;
+            }
+            else if (ChatInputTextBox != null && ChatInputTextBox.IsVisible)
+            {
+                activeTextBox = ChatInputTextBox;
+                activeButton = ChatSendButton;
+            }
+            else
             {
                 return;
             }
 
-            var userMessage = InputTextBox.Text;
+            if (activeTextBox.Text == PlaceholderText || string.IsNullOrWhiteSpace(activeTextBox.Text))
+            {
+                return;
+            }
+
+            var userMessage = activeTextBox.Text;
 
             // Добавляем сообщение пользователя в чат
             _chatMessages.Add(new ChatMessage(MessageRole.User, userMessage));
 
             // Очищаем поле ввода
-            InputTextBox.Text = string.Empty;
+            activeTextBox.Text = string.Empty;
 
             // Отключаем кнопку и поле ввода во время запроса
-            SendButton.IsEnabled = false;
-            InputTextBox.IsEnabled = false;
-            AiProviderComboBox.IsEnabled = false;
-            AgentCheckboxesPanel.IsEnabled = false;
+            if (activeButton != null) activeButton.IsEnabled = false;
+            if (activeTextBox != null) activeTextBox.IsEnabled = false;
+            if (AiProviderComboBox != null) AiProviderComboBox.IsEnabled = false;
+            if (AgentCheckboxesPanel != null) AgentCheckboxesPanel.IsEnabled = false;
 
             // Добавляем индикатор "думает"
             var thinkingMessage = new ChatMessage(MessageRole.Assistant, "Обрабатываю запрос...")
@@ -340,11 +356,13 @@ namespace BuildHub
             }
             finally
             {
-                // Восстанавливаем состояние
-                SendButton.IsEnabled = true;
-                InputTextBox.IsEnabled = true;
-                AiProviderComboBox.IsEnabled = true;
-                AgentCheckboxesPanel.IsEnabled = true;
+                // Восстанавливаем состояние всех контролов
+                if (SendButton != null) SendButton.IsEnabled = true;
+                if (ChatSendButton != null) ChatSendButton.IsEnabled = true;
+                if (InputTextBox != null) InputTextBox.IsEnabled = true;
+                if (ChatInputTextBox != null) ChatInputTextBox.IsEnabled = true;
+                if (AiProviderComboBox != null) AiProviderComboBox.IsEnabled = true;
+                if (AgentCheckboxesPanel != null) AgentCheckboxesPanel.IsEnabled = true;
             }
         }
 
