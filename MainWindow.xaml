@@ -563,12 +563,14 @@
                                                     Grid.Column="1"
                                                     Background="Transparent"
                                                     BorderThickness="0"
-                                                    Foreground="#AAAAAA"
+                                                    Foreground="White"
+                                                    CaretBrush="White"
                                                     FontSize="14"
                                                     VerticalAlignment="Center"
                                                     Text="Расскажите нам о своих возможностях"
                                                     GotFocus="InputTextBox_GotFocus"
-                                                    LostFocus="InputTextBox_LostFocus"/>
+                                                    LostFocus="InputTextBox_LostFocus"
+                                                    KeyDown="InputTextBox_KeyDown"/>
 
                                             <!-- Кнопка отправки -->
                                             <Button x:Name="SendButton"
@@ -862,11 +864,13 @@
                                         Background="Transparent"
                                         BorderThickness="0"
                                         Foreground="White"
+                                        CaretBrush="White"
                                         FontSize="14"
                                         VerticalAlignment="Center"
                                         Text="Введите ваше сообщение..."
                                         GotFocus="InputTextBox_GotFocus"
                                         LostFocus="InputTextBox_LostFocus"
+                                        KeyDown="InputTextBox_KeyDown"
                                         Margin="0,0,10,0"/>
 
                                 <!-- Кнопка отправки для чата -->

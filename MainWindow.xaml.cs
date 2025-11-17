@@ -15,7 +15,7 @@ namespace BuildHub
 {
     public partial class MainWindow : Window
     {
-        private const string PlaceholderText = "Введите ваше сообщение...";
+        private const string PlaceholderText = "Расскажите нам о своих возможностях";
         private const string SearchPlaceholder = "Search";
         private AiServiceFactory _aiServiceFactory;
         private IAiService? _currentAiService;
@@ -153,19 +153,37 @@ namespace BuildHub
 
         private void InputTextBox_GotFocus(object sender, RoutedEventArgs e)
         {
-            if (InputTextBox.Text == PlaceholderText)
+            if (sender is TextBox textBox)
             {
-                InputTextBox.Text = string.Empty;
-                InputTextBox.Foreground = new SolidColorBrush(Colors.White);
+                var placeholderToCheck = textBox.Name == "ChatInputTextBox" ? "Введите ваше сообщение..." : PlaceholderText;
+
+                if (textBox.Text == placeholderToCheck)
+                {
+                    textBox.Text = string.Empty;
+                    textBox.Foreground = new SolidColorBrush(Colors.White);
+                }
             }
         }
 
         private void InputTextBox_LostFocus(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(InputTextBox.Text))
+            if (sender is TextBox textBox)
             {
-                InputTextBox.Text = PlaceholderText;
-                InputTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#AAAAAA"));
+                var placeholderToUse = textBox.Name == "ChatInputTextBox" ? "Введите ваше сообщение..." : PlaceholderText;
+
+                if (string.IsNullOrWhiteSpace(textBox.Text))
+                {
+                    textBox.Text = placeholderToUse;
+                    textBox.Foreground = new SolidColorBrush(Colors.White);
+                }
+            }
+        }
+
+        private void InputTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                SendButton_Click(sender, e);
             }
         }
 

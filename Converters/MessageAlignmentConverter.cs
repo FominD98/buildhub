@@ -81,8 +81,8 @@ namespace BuildHub.Converters
         {
             if (value is ICollection collection)
             {
-                // Показываем чат если есть больше 1 сообщения (приветствие не считается)
-                return collection.Count > 1 ? Visibility.Visible : Visibility.Collapsed;
+                // Показываем чат если есть хотя бы одно сообщение
+                return collection.Count >= 1 ? Visibility.Visible : Visibility.Collapsed;
             }
             return Visibility.Collapsed;
         }
@@ -99,8 +99,8 @@ namespace BuildHub.Converters
         {
             if (value is ICollection collection)
             {
-                // Показываем стартовую страницу если только приветствие или пусто
-                return collection.Count <= 1 ? Visibility.Visible : Visibility.Collapsed;
+                // Показываем стартовую страницу только если чат пустой
+                return collection.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             }
             return Visibility.Visible;
         }
