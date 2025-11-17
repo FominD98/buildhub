@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System;
 using System.Net.Http;
 using System.Linq;
+using System.Collections.Generic;
 using BuildHub.Models;
 
 namespace BuildHub
@@ -17,14 +18,19 @@ namespace BuildHub
         private AiServiceFactory _aiServiceFactory;
         private IAiService? _currentAiService;
         private readonly ProjectManager _projectManager;
+        private readonly AgentManager _agentManager;
+        private readonly AgentExecutor _agentExecutor;
         private string _currentSearchQuery = string.Empty;
 
         public MainWindow()
         {
             InitializeComponent();
             _projectManager = ProjectManager.Instance;
+            _agentManager = AgentManager.Instance;
+            _agentExecutor = new AgentExecutor();
             InitializeAiServices();
             LoadProjects();
+            LoadAgents();
         }
 
         private void InitializeAiServices()
@@ -34,6 +40,18 @@ namespace BuildHub
 
             _aiServiceFactory = new AiServiceFactory(config);
             _currentAiService = _aiServiceFactory.CreateService(AiProvider.ChatGPT);
+        }
+
+        private void LoadAgents()
+        {
+            var agents = _agentManager.GetAllAgents();
+
+            // Создаем специальный элемент "Без агента"
+            var agentList = new List<object> { new { Id = Guid.Empty, Name = "Без агента (прямой запрос)" } };
+            agentList.AddRange(agents);
+
+            AgentComboBox.ItemsSource = agentList;
+            AgentComboBox.SelectedIndex = 0; // По умолчанию "Без агента"
         }
 
         private void LoadProjects(string searchQuery = "")
@@ -122,30 +140,75 @@ namespace BuildHub
 
             var userMessage = InputTextBox.Text;
 
-            // Обновляем провайдера на основе выбора
-            UpdateAiProvider();
-
             // Отключаем кнопку и поле ввода во время запроса
             SendButton.IsEnabled = false;
             InputTextBox.IsEnabled = false;
+            AgentComboBox.IsEnabled = false;
+            AiProviderComboBox.IsEnabled = false;
             InputTextBox.Text = "Отправка запроса...";
             InputTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#AAAAAA"));
 
             try
             {
-                if (_currentAiService != null)
-                {
-                    var response = await _currentAiService.SendMessageAsync(userMessage);
+                string response;
+                string sourceInfo;
 
-                    // Показываем ответ
-                    MessageBox.Show($"Ответ от {_currentAiService.GetServiceName()}:\n\n{response}",
-                                  "Ответ AI", MessageBoxButton.OK, MessageBoxImage.Information);
+                // Проверяем, выбран ли агент
+                var selectedAgentValue = AgentComboBox.SelectedValue;
+                if (selectedAgentValue is Guid agentId && agentId != Guid.Empty)
+                {
+                    // Используем агента
+                    var agent = _agentManager.GetAgent(agentId);
+                    if (agent != null)
+                    {
+                        var task = await _agentExecutor.ExecuteTaskAsync(agent, userMessage);
+
+                        if (task.Status == TaskStatus.Completed)
+                        {
+                            response = task.Response ?? "Нет ответа";
+                            sourceInfo = $"Агент: {agent.Name}";
+                        }
+                        else if (task.Status == TaskStatus.Failed)
+                        {
+                            MessageBox.Show($"Ошибка выполнения задачи агентом:\n{task.ErrorMessage}",
+                                "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                            return;
+                        }
+                        else
+                        {
+                            MessageBox.Show("Задача была отменена", "Отменено",
+                                MessageBoxButton.OK, MessageBoxImage.Information);
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show("Выбранный агент не найден", "Ошибка",
+                            MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
                 }
                 else
                 {
-                    MessageBox.Show("AI сервис не инициализирован", "Ошибка",
-                                  MessageBoxButton.OK, MessageBoxImage.Error);
+                    // Прямой запрос без агента
+                    UpdateAiProvider();
+
+                    if (_currentAiService != null)
+                    {
+                        response = await _currentAiService.SendMessageAsync(userMessage);
+                        sourceInfo = $"Провайдер: {_currentAiService.GetServiceName()}";
+                    }
+                    else
+                    {
+                        MessageBox.Show("AI сервис не инициализирован", "Ошибка",
+                            MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
                 }
+
+                // Показываем ответ
+                MessageBox.Show($"{sourceInfo}\n\n{response}",
+                    "Ответ AI", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (OperationCanceledException)
             {
@@ -177,6 +240,8 @@ namespace BuildHub
                 // Восстанавливаем состояние
                 SendButton.IsEnabled = true;
                 InputTextBox.IsEnabled = true;
+                AgentComboBox.IsEnabled = true;
+                AiProviderComboBox.IsEnabled = true;
                 InputTextBox.Text = PlaceholderText;
                 InputTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#AAAAAA"));
             }
@@ -194,6 +259,15 @@ namespace BuildHub
             };
 
             _currentAiService = _aiServiceFactory.CreateService(provider);
+        }
+
+        private void AiProviderComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // Когда меняется провайдер, сбрасываем выбор агента на "Без агента"
+            if (AgentComboBox != null)
+            {
+                AgentComboBox.SelectedIndex = 0;
+            }
         }
 
         private void AddProjectButton_Click(object sender, RoutedEventArgs e)
@@ -252,12 +326,25 @@ namespace BuildHub
             var createButton = new Button
             {
                 Content = "Создать",
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#30FFFFFF")),
                 Foreground = Brushes.White,
-                Padding = new Thickness(12, 8, 12, 8),
+                Padding = new Thickness(16, 10, 16, 10),
                 Cursor = Cursors.Hand,
-                BorderThickness = new Thickness(0)
+                BorderThickness = new Thickness(1),
+                FontSize = 14,
+                FontWeight = FontWeights.SemiBold,
+                BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#40FFFFFF"))
             };
+
+            // Градиентный фон как в других кнопках
+            var gradientBrush = new LinearGradientBrush
+            {
+                StartPoint = new Point(0, 0),
+                EndPoint = new Point(1, 1)
+            };
+            gradientBrush.GradientStops.Add(new GradientStop((Color)ColorConverter.ConvertFromString("#FFF5F0"), 0));
+            gradientBrush.GradientStops.Add(new GradientStop((Color)ColorConverter.ConvertFromString("#FFDAB9"), 0.5));
+            gradientBrush.GradientStops.Add(new GradientStop((Color)ColorConverter.ConvertFromString("#EC4899"), 1));
+            createButton.Background = gradientBrush;
 
             createButton.Click += (s, args) =>
             {

@@ -19,6 +19,8 @@ namespace BuildHub
         private void LoadAgents()
         {
             var agents = _agentManager.GetAllAgents();
+            // Очищаем и обновляем ItemsSource для принудительного обновления UI
+            AgentsListControl.ItemsSource = null;
             AgentsListControl.ItemsSource = agents;
         }
 

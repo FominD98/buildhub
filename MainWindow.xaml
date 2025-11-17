@@ -506,6 +506,7 @@
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
@@ -514,20 +515,39 @@
                                     <ComboBox x:Name="AiProviderComboBox"
                                              Grid.Column="0"
                                              VerticalAlignment="Center"
-                                             Margin="0,0,15,0"
+                                             Margin="0,0,10,0"
                                              Width="150"
                                              Background="#30FFFFFF"
                                              Foreground="White"
                                              BorderBrush="#30FFFFFF"
-                                             SelectedIndex="0">
+                                             SelectedIndex="0"
+                                             SelectionChanged="AiProviderComboBox_SelectionChanged">
                                         <ComboBoxItem Content="💻 ChatGPT"/>
                                         <ComboBoxItem Content="🤖 DeepSeek"/>
                                         <ComboBoxItem Content="🔮 YandexGPT"/>
                                     </ComboBox>
 
+                                    <!-- Agent Selector -->
+                                    <ComboBox x:Name="AgentComboBox"
+                                             Grid.Column="1"
+                                             VerticalAlignment="Center"
+                                             Margin="0,0,15,0"
+                                             Width="180"
+                                             Background="#30FFFFFF"
+                                             Foreground="White"
+                                             BorderBrush="#30FFFFFF"
+                                             DisplayMemberPath="Name"
+                                             SelectedValuePath="Id">
+                                        <ComboBox.ItemContainerStyle>
+                                            <Style TargetType="ComboBoxItem">
+                                                <Setter Property="Foreground" Value="White"/>
+                                            </Style>
+                                        </ComboBox.ItemContainerStyle>
+                                    </ComboBox>
+
                                     <!-- Текстовое поле -->
                                     <TextBox x:Name="InputTextBox"
-                                            Grid.Column="1"
+                                            Grid.Column="2"
                                             Background="Transparent"
                                             BorderThickness="0"
                                             Foreground="#AAAAAA"
@@ -539,7 +559,7 @@
 
                                     <!-- Кнопка отправки -->
                                     <Button x:Name="SendButton"
-                                           Grid.Column="2"
+                                           Grid.Column="3"
                                            Width="40"
                                            Height="40"
                                            BorderThickness="0"
