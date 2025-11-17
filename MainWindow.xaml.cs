@@ -304,6 +304,10 @@ namespace BuildHub
 
         private void SearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
+            // Защита от вызова во время инициализации XAML
+            if (_projectManager == null)
+                return;
+
             var searchText = SearchTextBox.Text;
             if (searchText == SearchPlaceholder)
             {
