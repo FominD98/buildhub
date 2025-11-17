@@ -242,7 +242,8 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Column="0"
+                <TextBlock x:Name="WindowTitle"
+                          Grid.Column="0"
                           Text="Создать нового агента"
                           FontSize="18"
                           FontWeight="SemiBold"

@@ -71,5 +71,46 @@ namespace BuildHub
                 workspaceWindow.Show();
             }
         }
+
+        private void EditAgentButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement button && button.Tag is Agent agent)
+            {
+                var editWindow = new CreateAgentWindow(agent);
+                if (editWindow.ShowDialog() == true)
+                {
+                    LoadAgents();
+                }
+                // Останавливаем событие, чтобы не открылся workspace
+                if (e is MouseButtonEventArgs mouseEvent)
+                {
+                    mouseEvent.Handled = true;
+                }
+            }
+        }
+
+        private void DeleteAgentButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement button && button.Tag is Agent agent)
+            {
+                var result = MessageBox.Show(
+                    $"Вы уверены, что хотите удалить агента '{agent.Name}'?",
+                    "Подтверждение удаления",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    _agentManager.DeleteAgent(agent.Id);
+                    LoadAgents();
+                }
+
+                // Останавливаем событие, чтобы не открылся workspace
+                if (e is MouseButtonEventArgs mouseEvent)
+                {
+                    mouseEvent.Handled = true;
+                }
+            }
+        }
     }
 }

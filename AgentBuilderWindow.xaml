@@ -217,13 +217,97 @@
                                             <RowDefinition Height="Auto"/>
                                         </Grid.RowDefinitions>
 
-                                        <!-- Название агента -->
-                                        <TextBlock Grid.Row="0"
-                                                  Text="{Binding Name}"
-                                                  FontSize="18"
-                                                  FontWeight="Bold"
-                                                  Foreground="White"
-                                                  Margin="0,0,0,8"/>
+                                        <!-- Заголовок с кнопками управления -->
+                                        <Grid Grid.Row="0" Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- Название агента -->
+                                            <TextBlock Grid.Column="0"
+                                                      Text="{Binding Name}"
+                                                      FontSize="18"
+                                                      FontWeight="Bold"
+                                                      Foreground="White"
+                                                      VerticalAlignment="Center"/>
+
+                                            <!-- Кнопки управления -->
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="5,0,0,0">
+                                                <!-- Кнопка редактирования -->
+                                                <Button Content="✎"
+                                                       FontSize="14"
+                                                       Width="28"
+                                                       Height="28"
+                                                       Margin="0,0,5,0"
+                                                       Background="#20FFFFFF"
+                                                       Foreground="#AAAAAA"
+                                                       BorderThickness="0"
+                                                       Cursor="Hand"
+                                                       ToolTip="Редактировать"
+                                                       Click="EditAgentButton_Click"
+                                                       Tag="{Binding}">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button">
+                                                            <Setter Property="Template">
+                                                                <Setter.Value>
+                                                                    <ControlTemplate TargetType="Button">
+                                                                        <Border Background="{TemplateBinding Background}"
+                                                                               CornerRadius="6"
+                                                                               BorderThickness="0">
+                                                                            <ContentPresenter HorizontalAlignment="Center"
+                                                                                            VerticalAlignment="Center"/>
+                                                                        </Border>
+                                                                    </ControlTemplate>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                            <Style.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter Property="Background" Value="#30FFFFFF"/>
+                                                                    <Setter Property="Foreground" Value="White"/>
+                                                                </Trigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                </Button>
+
+                                                <!-- Кнопка удаления -->
+                                                <Button Content="🗑"
+                                                       FontSize="14"
+                                                       Width="28"
+                                                       Height="28"
+                                                       Background="#20FFFFFF"
+                                                       Foreground="#AAAAAA"
+                                                       BorderThickness="0"
+                                                       Cursor="Hand"
+                                                       ToolTip="Удалить"
+                                                       Click="DeleteAgentButton_Click"
+                                                       Tag="{Binding}">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button">
+                                                            <Setter Property="Template">
+                                                                <Setter.Value>
+                                                                    <ControlTemplate TargetType="Button">
+                                                                        <Border Background="{TemplateBinding Background}"
+                                                                               CornerRadius="6"
+                                                                               BorderThickness="0">
+                                                                            <ContentPresenter HorizontalAlignment="Center"
+                                                                                            VerticalAlignment="Center"/>
+                                                                        </Border>
+                                                                    </ControlTemplate>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                            <Style.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter Property="Background" Value="#EC4899"/>
+                                                                    <Setter Property="Foreground" Value="White"/>
+                                                                </Trigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                </Button>
+                                            </StackPanel>
+                                        </Grid>
 
                                         <!-- Описание -->
                                         <TextBlock Grid.Row="1"

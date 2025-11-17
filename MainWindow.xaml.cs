@@ -40,6 +40,16 @@ namespace BuildHub
             LoadProjects();
             LoadAgents();
             InitializeChat();
+
+            // Подписываемся на событие активации окна для обновления агентов
+            this.Activated += MainWindow_Activated;
+        }
+
+        private void MainWindow_Activated(object? sender, EventArgs e)
+        {
+            // Обновляем список агентов при активации окна
+            // (например, после закрытия AgentBuilderWindow)
+            LoadAgents();
         }
 
         private void InitializeChat()
