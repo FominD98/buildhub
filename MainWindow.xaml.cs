@@ -26,6 +26,10 @@ namespace BuildHub
         private List<Guid> _selectedAgentIds = new List<Guid>();
         private ObservableCollection<ChatMessage> _chatMessages = new ObservableCollection<ChatMessage>();
 
+        // Система хранения истории чатов для каждого проекта
+        private Dictionary<Guid, ObservableCollection<ChatMessage>> _projectChatHistories = new Dictionary<Guid, ObservableCollection<ChatMessage>>();
+        private Guid? _currentProjectId = null;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -160,6 +164,103 @@ namespace BuildHub
                     WelcomeGrid.Visibility = Visibility.Visible;
                     ChatGrid.Visibility = Visibility.Collapsed;
                     Console.WriteLine($"✓ Switched to Welcome view. Messages: {_chatMessages.Count}");
+                }
+            }
+        }
+
+        private void SwitchToProject(Guid projectId)
+        {
+            Console.WriteLine($"=== SwitchToProject called: {projectId} ===");
+
+            // Сохраняем текущую историю чата (если есть активный проект)
+            if (_currentProjectId.HasValue)
+            {
+                Console.WriteLine($"  Saving chat history for project: {_currentProjectId.Value}");
+                _projectChatHistories[_currentProjectId.Value] = new ObservableCollection<ChatMessage>(_chatMessages);
+            }
+
+            // Загружаем историю чата для выбранного проекта
+            _currentProjectId = projectId;
+
+            if (_projectChatHistories.ContainsKey(projectId))
+            {
+                Console.WriteLine($"  Loading existing chat history. Messages: {_projectChatHistories[projectId].Count}");
+                _chatMessages.Clear();
+                foreach (var message in _projectChatHistories[projectId])
+                {
+                    _chatMessages.Add(message);
+                }
+            }
+            else
+            {
+                Console.WriteLine($"  Creating new empty chat history");
+                _chatMessages.Clear();
+                _projectChatHistories[projectId] = _chatMessages;
+            }
+
+            // Обновляем визуальное выделение проектов
+            UpdateProjectSelection(projectId);
+
+            // Обновляем видимость интерфейса
+            UpdateChatVisibility();
+
+            // Прокручиваем чат вниз
+            ScrollToBottom();
+
+            Console.WriteLine($"✓ Switched to project: {projectId}. Messages: {_chatMessages.Count}");
+        }
+
+        private void UpdateProjectSelection(Guid selectedProjectId)
+        {
+            // Обновляем визуальное выделение всех проектов
+            if (ProjectsListControl == null) return;
+
+            foreach (var item in ProjectsListControl.Items)
+            {
+                var container = ProjectsListControl.ItemContainerGenerator.ContainerFromItem(item);
+                if (container != null)
+                {
+                    var borders = FindVisualChildren<Border>(container);
+                    foreach (var border in borders)
+                    {
+                        if (border.Tag is Guid projectId)
+                        {
+                            if (projectId == selectedProjectId)
+                            {
+                                // Выделяем выбранный проект
+                                border.BorderThickness = new Thickness(3, 0, 0, 0);
+                                border.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#EC4899"));
+                                border.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#30FFFFFF"));
+                            }
+                            else
+                            {
+                                // Снимаем выделение с остальных
+                                border.BorderThickness = new Thickness(0);
+                                border.BorderBrush = Brushes.Transparent;
+                                border.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#20FFFFFF"));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private static IEnumerable<T> FindVisualChildren<T>(DependencyObject depObj) where T : DependencyObject
+        {
+            if (depObj != null)
+            {
+                for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
+                {
+                    DependencyObject child = VisualTreeHelper.GetChild(depObj, i);
+                    if (child != null && child is T)
+                    {
+                        yield return (T)child;
+                    }
+
+                    foreach (T childOfChild in FindVisualChildren<T>(child))
+                    {
+                        yield return childOfChild;
+                    }
                 }
             }
         }
@@ -516,6 +617,13 @@ namespace BuildHub
             if (createWindow.ShowDialog() == true)
             {
                 LoadProjects(_currentSearchQuery);
+
+                // Автоматически переключаемся на новый проект
+                if (createWindow.CreatedProjectId.HasValue)
+                {
+                    Console.WriteLine($"New project created: {createWindow.CreatedProjectId.Value}");
+                    SwitchToProject(createWindow.CreatedProjectId.Value);
+                }
             }
         }
 
@@ -531,6 +639,15 @@ namespace BuildHub
                     _projectManager.DeleteProject(projectId);
                     LoadProjects(_currentSearchQuery);
                 }
+            }
+        }
+
+        private void ProjectItem_Click(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is Border border && border.Tag is Guid projectId)
+            {
+                Console.WriteLine($"Project clicked: {projectId}");
+                SwitchToProject(projectId);
             }
         }
 

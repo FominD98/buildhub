@@ -1,3 +1,4 @@
+using System;
 using System.Windows;
 using System.Windows.Input;
 using BuildHub.Services;
@@ -7,6 +8,7 @@ namespace BuildHub
     public partial class CreateProjectWindow : Window
     {
         private readonly ProjectManager _projectManager;
+        public Guid? CreatedProjectId { get; private set; }
 
         public CreateProjectWindow()
         {
@@ -43,7 +45,8 @@ namespace BuildHub
                 return;
             }
 
-            _projectManager.CreateProject(NameTextBox.Text.Trim(), DescriptionTextBox.Text.Trim());
+            var createdProject = _projectManager.CreateProject(NameTextBox.Text.Trim(), DescriptionTextBox.Text.Trim());
+            CreatedProjectId = createdProject.Id;
 
             this.DialogResult = true;
             this.Close();
