@@ -7,6 +7,7 @@ using System;
 using System.Net.Http;
 using System.Linq;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using BuildHub.Models;
 
 namespace BuildHub
@@ -21,6 +22,7 @@ namespace BuildHub
         private readonly AgentManager _agentManager;
         private readonly AgentExecutor _agentExecutor;
         private string _currentSearchQuery = string.Empty;
+        private List<Guid> _selectedAgentIds = new List<Guid>();
 
         public MainWindow()
         {
@@ -145,6 +147,7 @@ namespace BuildHub
             InputTextBox.IsEnabled = false;
             AgentComboBox.IsEnabled = false;
             AiProviderComboBox.IsEnabled = false;
+            SelectAgentsButton.IsEnabled = false;
             InputTextBox.Text = "Отправка запроса...";
             InputTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#AAAAAA"));
 
@@ -153,22 +156,71 @@ namespace BuildHub
                 string response;
                 string sourceInfo;
 
-                // Проверяем, выбран ли агент
-                var selectedAgentValue = AgentComboBox.SelectedValue;
-                if (selectedAgentValue is Guid agentId && agentId != Guid.Empty)
+                // Проверяем, выбрано ли несколько агентов
+                if (_selectedAgentIds.Count > 1)
                 {
-                    // Используем агента
-                    var agent = _agentManager.GetAgent(agentId);
+                    // Множественное выполнение агентов параллельно
+                    var tasks = new List<Task<(string AgentName, AgentTask Task)>>();
+
+                    foreach (var agentId in _selectedAgentIds)
+                    {
+                        var agent = _agentManager.GetAgent(agentId);
+                        if (agent != null)
+                        {
+                            tasks.Add(Task.Run(async () =>
+                            {
+                                var task = await _agentExecutor.ExecuteTaskAsync(agent, userMessage);
+                                return (agent.Name, task);
+                            }));
+                        }
+                    }
+
+                    var results = await Task.WhenAll(tasks);
+
+                    // Формируем комбинированный ответ
+                    var responseBuilder = new System.Text.StringBuilder();
+                    responseBuilder.AppendLine($"Результаты от {results.Length} агентов:\n");
+
+                    foreach (var (agentName, task) in results)
+                    {
+                        responseBuilder.AppendLine($"━━━━━━━━━━━━━━━━━━━━━━━━");
+                        responseBuilder.AppendLine($"Агент: {agentName}");
+                        responseBuilder.AppendLine($"━━━━━━━━━━━━━━━━━━━━━━━━");
+
+                        if (task.Status == Models.TaskStatus.Completed)
+                        {
+                            responseBuilder.AppendLine(task.Response ?? "Нет ответа");
+                        }
+                        else if (task.Status == Models.TaskStatus.Failed)
+                        {
+                            responseBuilder.AppendLine($"❌ Ошибка: {task.ErrorMessage}");
+                        }
+                        else
+                        {
+                            responseBuilder.AppendLine("⚠️ Задача была отменена");
+                        }
+
+                        responseBuilder.AppendLine();
+                    }
+
+                    response = responseBuilder.ToString();
+                    sourceInfo = "Множественное выполнение";
+                }
+                // Проверяем, выбран ли один агент
+                else if (_selectedAgentIds.Count == 1)
+                {
+                    // Используем выбранного агента из списка
+                    var agent = _agentManager.GetAgent(_selectedAgentIds[0]);
                     if (agent != null)
                     {
                         var task = await _agentExecutor.ExecuteTaskAsync(agent, userMessage);
 
-                        if (task.Status == TaskStatus.Completed)
+                        if (task.Status == Models.TaskStatus.Completed)
                         {
                             response = task.Response ?? "Нет ответа";
                             sourceInfo = $"Агент: {agent.Name}";
                         }
-                        else if (task.Status == TaskStatus.Failed)
+                        else if (task.Status == Models.TaskStatus.Failed)
                         {
                             MessageBox.Show($"Ошибка выполнения задачи агентом:\n{task.ErrorMessage}",
                                 "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -188,21 +240,59 @@ namespace BuildHub
                         return;
                     }
                 }
+                // Проверяем, выбран ли агент через ComboBox
                 else
                 {
-                    // Прямой запрос без агента
-                    UpdateAiProvider();
-
-                    if (_currentAiService != null)
+                    var selectedAgentValue = AgentComboBox.SelectedValue;
+                    if (selectedAgentValue is Guid agentId && agentId != Guid.Empty)
                     {
-                        response = await _currentAiService.SendMessageAsync(userMessage);
-                        sourceInfo = $"Провайдер: {_currentAiService.GetServiceName()}";
+                        // Используем агента из ComboBox
+                        var agent = _agentManager.GetAgent(agentId);
+                        if (agent != null)
+                        {
+                            var task = await _agentExecutor.ExecuteTaskAsync(agent, userMessage);
+
+                            if (task.Status == Models.TaskStatus.Completed)
+                            {
+                                response = task.Response ?? "Нет ответа";
+                                sourceInfo = $"Агент: {agent.Name}";
+                            }
+                            else if (task.Status == Models.TaskStatus.Failed)
+                            {
+                                MessageBox.Show($"Ошибка выполнения задачи агентом:\n{task.ErrorMessage}",
+                                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                                return;
+                            }
+                            else
+                            {
+                                MessageBox.Show("Задача была отменена", "Отменено",
+                                    MessageBoxButton.OK, MessageBoxImage.Information);
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            MessageBox.Show("Выбранный агент не найден", "Ошибка",
+                                MessageBoxButton.OK, MessageBoxImage.Error);
+                            return;
+                        }
                     }
                     else
                     {
-                        MessageBox.Show("AI сервис не инициализирован", "Ошибка",
-                            MessageBoxButton.OK, MessageBoxImage.Error);
-                        return;
+                        // Прямой запрос без агента
+                        UpdateAiProvider();
+
+                        if (_currentAiService != null)
+                        {
+                            response = await _currentAiService.SendMessageAsync(userMessage);
+                            sourceInfo = $"Провайдер: {_currentAiService.GetServiceName()}";
+                        }
+                        else
+                        {
+                            MessageBox.Show("AI сервис не инициализирован", "Ошибка",
+                                MessageBoxButton.OK, MessageBoxImage.Error);
+                            return;
+                        }
                     }
                 }
 
@@ -242,6 +332,7 @@ namespace BuildHub
                 InputTextBox.IsEnabled = true;
                 AgentComboBox.IsEnabled = true;
                 AiProviderComboBox.IsEnabled = true;
+                SelectAgentsButton.IsEnabled = true;
                 InputTextBox.Text = PlaceholderText;
                 InputTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#AAAAAA"));
             }
@@ -272,101 +363,52 @@ namespace BuildHub
 
         private void AddProjectButton_Click(object sender, RoutedEventArgs e)
         {
-            // Простой диалог для ввода имени проекта
-            var dialog = new Window
+            var createWindow = new CreateProjectWindow();
+            if (createWindow.ShowDialog() == true)
             {
-                Title = "Новый проект",
-                Width = 400,
-                Height = 250,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                Owner = this,
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2E2E2E")),
-                WindowStyle = WindowStyle.ToolWindow
-            };
-
-            var stackPanel = new StackPanel { Margin = new Thickness(20) };
-
-            var nameLabel = new TextBlock
-            {
-                Text = "Название проекта:",
-                Foreground = Brushes.White,
-                Margin = new Thickness(0, 0, 0, 8)
-            };
-
-            var nameTextBox = new TextBox
-            {
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#20FFFFFF")),
-                Foreground = Brushes.White,
-                Padding = new Thickness(8),
-                BorderThickness = new Thickness(1),
-                BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#40FFFFFF")),
-                Margin = new Thickness(0, 0, 0, 12)
-            };
-
-            var descLabel = new TextBlock
-            {
-                Text = "Описание (необязательно):",
-                Foreground = Brushes.White,
-                Margin = new Thickness(0, 0, 0, 8)
-            };
-
-            var descTextBox = new TextBox
-            {
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#20FFFFFF")),
-                Foreground = Brushes.White,
-                Padding = new Thickness(8),
-                BorderThickness = new Thickness(1),
-                BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#40FFFFFF")),
-                Margin = new Thickness(0, 0, 0, 20),
-                Height = 60,
-                TextWrapping = TextWrapping.Wrap,
-                AcceptsReturn = true
-            };
-
-            var createButton = new Button
-            {
-                Content = "Создать",
-                Foreground = Brushes.White,
-                Padding = new Thickness(16, 10, 16, 10),
-                Cursor = Cursors.Hand,
-                BorderThickness = new Thickness(1),
-                FontSize = 14,
-                FontWeight = FontWeights.SemiBold,
-                BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#40FFFFFF"))
-            };
-
-            // Градиентный фон как в других кнопках
-            var gradientBrush = new LinearGradientBrush
-            {
-                StartPoint = new Point(0, 0),
-                EndPoint = new Point(1, 1)
-            };
-            gradientBrush.GradientStops.Add(new GradientStop((Color)ColorConverter.ConvertFromString("#FFF5F0"), 0));
-            gradientBrush.GradientStops.Add(new GradientStop((Color)ColorConverter.ConvertFromString("#FFDAB9"), 0.5));
-            gradientBrush.GradientStops.Add(new GradientStop((Color)ColorConverter.ConvertFromString("#EC4899"), 1));
-            createButton.Background = gradientBrush;
-
-            createButton.Click += (s, args) =>
-            {
-                if (string.IsNullOrWhiteSpace(nameTextBox.Text))
-                {
-                    MessageBox.Show("Введите название проекта", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                _projectManager.CreateProject(nameTextBox.Text.Trim(), descTextBox.Text.Trim());
                 LoadProjects(_currentSearchQuery);
-                dialog.Close();
-            };
+            }
+        }
 
-            stackPanel.Children.Add(nameLabel);
-            stackPanel.Children.Add(nameTextBox);
-            stackPanel.Children.Add(descLabel);
-            stackPanel.Children.Add(descTextBox);
-            stackPanel.Children.Add(createButton);
+        private void SelectAgentsButton_Click(object sender, RoutedEventArgs e)
+        {
+            var selectWindow = new SelectAgentsWindow(_selectedAgentIds);
+            if (selectWindow.ShowDialog() == true)
+            {
+                _selectedAgentIds = selectWindow.SelectedAgentIds;
+                UpdateAgentSelectionDisplay();
+            }
+        }
 
-            dialog.Content = stackPanel;
-            dialog.ShowDialog();
+        private void UpdateAgentSelectionDisplay()
+        {
+            if (_selectedAgentIds.Count == 0)
+            {
+                AgentComboBox.SelectedIndex = 0; // "Без агента"
+            }
+            else if (_selectedAgentIds.Count == 1)
+            {
+                var agent = _agentManager.GetAgent(_selectedAgentIds[0]);
+                if (agent != null)
+                {
+                    // Находим индекс агента в ComboBox
+                    var agentList = AgentComboBox.ItemsSource as List<object>;
+                    if (agentList != null)
+                    {
+                        var index = agentList.FindIndex(item =>
+                        {
+                            if (item is Agent a) return a.Id == agent.Id;
+                            return false;
+                        });
+                        if (index >= 0) AgentComboBox.SelectedIndex = index;
+                    }
+                }
+            }
+            else
+            {
+                // Множественный выбор - обновляем текст в ComboBox
+                AgentComboBox.SelectedIndex = -1;
+            }
         }
 
         private void DeleteProjectMenuItem_Click(object sender, RoutedEventArgs e)

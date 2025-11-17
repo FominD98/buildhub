@@ -507,6 +507,7 @@
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
@@ -531,7 +532,7 @@
                                     <ComboBox x:Name="AgentComboBox"
                                              Grid.Column="1"
                                              VerticalAlignment="Center"
-                                             Margin="0,0,15,0"
+                                             Margin="0,0,5,0"
                                              Width="180"
                                              Background="#30FFFFFF"
                                              Foreground="White"
@@ -545,9 +546,42 @@
                                         </ComboBox.ItemContainerStyle>
                                     </ComboBox>
 
+                                    <!-- Multi-Agent Selection Button -->
+                                    <Button x:Name="SelectAgentsButton"
+                                           Grid.Column="2"
+                                           Content="👥"
+                                           Width="35"
+                                           Height="35"
+                                           Background="#30FFFFFF"
+                                           BorderBrush="#40FFFFFF"
+                                           BorderThickness="1"
+                                           Foreground="White"
+                                           FontSize="16"
+                                           Cursor="Hand"
+                                           Margin="0,0,15,0"
+                                           ToolTip="Выбрать несколько агентов"
+                                           Click="SelectAgentsButton_Click">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}"
+                                                       BorderBrush="{TemplateBinding BorderBrush}"
+                                                       BorderThickness="{TemplateBinding BorderThickness}"
+                                                       CornerRadius="8">
+                                                    <ContentPresenter HorizontalAlignment="Center"
+                                                                    VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="#40FFFFFF"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+
                                     <!-- Текстовое поле -->
                                     <TextBox x:Name="InputTextBox"
-                                            Grid.Column="2"
+                                            Grid.Column="3"
                                             Background="Transparent"
                                             BorderThickness="0"
                                             Foreground="#AAAAAA"
@@ -559,7 +593,7 @@
 
                                     <!-- Кнопка отправки -->
                                     <Button x:Name="SendButton"
-                                           Grid.Column="3"
+                                           Grid.Column="4"
                                            Width="40"
                                            Height="40"
                                            BorderThickness="0"
