@@ -46,7 +46,7 @@ namespace BuildHub
 
             // Меняем заголовок окна и кнопки
             WindowTitle.Text = "Редактирование агента";
-            CreateButton.Content = "Сохранить";
+            //CreateButton.Content = "Сохранить";
         }
 
         private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
